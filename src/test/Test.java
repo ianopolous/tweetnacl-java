@@ -56,6 +56,17 @@ public class Test
                     "" +
                     "function sign(message, secretSigningKey) {" +
                     "    return window.nacl.sign(message, secretSigningKey);" +
+                    "}" +
+                    "" +
+                    "function sign_keypair(seed) {" +
+                    "    var pk = new Uint8Array(32);\n" +
+                    "    var sk = new Uint8Array(64);\n" +
+                    "    for (var i = 0; i < 32; i++) sk[i] = seed[i];\n" +
+                    "    window.nacl.lowlevel.crypto_sign_keypair(pk, sk, true);" +
+                    "    var both = new Uint8Array(96);" +
+                    "    for (var i = 0; i < 32; i++) both[i] = pk[i];" +
+                    "    for (var i = 0; i < 64; i++) both[32+i] = sk[i];" +
+                    "    return both;" +
                     "}");
             engine.eval(new InputStreamReader(Test.class.getClassLoader().getResourceAsStream("lib/nacl.js")));
             engine.eval("Object.freeze(this);");
@@ -126,7 +137,7 @@ public class Test
         } catch (Exception e) {throw new RuntimeException(e);}
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         byte[] publicBoxingKey = new byte[32];
         byte[] secretBoxingKey = new byte[32];
         TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, true);
@@ -153,7 +164,21 @@ public class Test
         // sign and unsign
         byte[] publicSigningKey = new byte[32];
         byte[] secretSigningKey = new byte[64];
+        byte[] signSeed = new byte[32];
+        System.arraycopy(signSeed, 0, secretSigningKey, 0, 32);
         TweetNaCl.crypto_sign_keypair(publicSigningKey, secretSigningKey, true);
+        byte[] jsSignPair = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("sign_keypair",
+                invocable.invokeFunction("fromByteArray", signSeed)));
+        byte[] jsSecretSignKey = Arrays.copyOfRange(jsSignPair, 32, 96);
+        byte[] jsPublicSignKey = Arrays.copyOfRange(jsSignPair, 0, 32);
+        if (!Arrays.equals(secretSigningKey, jsSecretSignKey)) {
+            throw new IllegalStateException("Signing key generation invalid, different secret keys!");
+        }
+        if (!Arrays.equals(publicSigningKey, jsPublicSignKey)) {
+            throw new IllegalStateException("Signing key generation invalid, different public keys!");
+        }
+
+
         byte[] sig = TweetNaCl.crypto_sign(message, secretSigningKey);
         byte[] sig2 = signMessage(message, secretSigningKey);
         if (!Arrays.equals(sig, sig2)) {
