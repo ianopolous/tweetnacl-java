@@ -26,7 +26,7 @@ public class Test
         try {
             engine.eval("var navigator = {}, window = {}; window.crypto = {};\n window.crypto.getRandomValues = " +
                     "function (arr){\n" +
-                    "    var jarr = Java.type('org.peergos.crypto.TweetNaCl').getRandomValues(arr.length);\n" +
+                    "    var jarr = Java.type('test.Test').getRandomValues(arr.length);\n" +
                     "    for (var i=0; i < arr.length; i++) arr[i] = jarr[i];\n" +
                     "}\n" +
                     "" +
@@ -57,7 +57,7 @@ public class Test
                     "function sign(message, secretSigningKey) {" +
                     "    return window.nacl.sign(message, secretSigningKey);" +
                     "}");
-            engine.eval(new InputStreamReader(Test.class.getClassLoader().getResourceAsStream("src/test/nacl.js")));
+            engine.eval(new InputStreamReader(Test.class.getClassLoader().getResourceAsStream("lib/nacl.js")));
             engine.eval("Object.freeze(this);");
         } catch (Exception e) {
             throw new IllegalStateException(e);

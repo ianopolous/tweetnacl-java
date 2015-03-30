@@ -1336,12 +1336,6 @@ public class TweetNaCl {
 
     private static Random prng = new Random(0); // only used for testing, so make deterministic
 
-    public static byte[] getRandomValues(int len) {
-        byte[] a = new byte[len];
-        randombytes(a, len);
-        return a;
-    }
-
     private static void randombytes(byte[] b, int len) {
         byte[] r = new byte[len];
         prng.nextBytes(r);
