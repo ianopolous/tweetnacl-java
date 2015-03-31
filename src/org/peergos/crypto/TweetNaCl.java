@@ -198,7 +198,7 @@ public class TweetNaCl {
         int mOff = 0;
         while (b >= 64) {
             crypto_core_salsa20(x,z,k,sigma);
-            for (i=0;i < 64; ++i) c[i] = (byte)((m != null ? m[i]:0)^ x[i]);
+            for (i=0;i < 64; ++i) c[cOff + i] = (byte)((m != null ? m[mOff + i]:0)^ x[i]);
             u = 1;
             for (i = 8;i < 16;++i) {
                 u += (int) z[i];
@@ -211,7 +211,7 @@ public class TweetNaCl {
         }
         if (b != 0) {
             crypto_core_salsa20(x,z,k,sigma);
-            for (i=0;i < b; i++) c[i] = (byte)((m != null ? m[i]:0)^ x[i]);
+            for (i=0;i < b; i++) c[cOff + i] = (byte)((m != null ? m[mOff + i]:0)^ x[i]);
         }
         return 0;
     }
@@ -1215,7 +1215,7 @@ public class TweetNaCl {
             return -1;
         }
 
-        for (i=0;i < n;++i)m[i] = sm[i + 64];
+        for (i=0;i < n;++i)m[64 + i] = sm[i + 64];
 //        mlen[0] = n;
         return 0;
     }
