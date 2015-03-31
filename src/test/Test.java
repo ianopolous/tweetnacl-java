@@ -161,7 +161,7 @@ public class Test
         if (!Arrays.equals(clear2, message))
             throw new IllegalStateException("J -> JS, Decrypted message != original: "+new String(clear2) + " != "+new String(message));
 
-        // sign and unsign
+        // sign keygen
         byte[] publicSigningKey = new byte[32];
         byte[] secretSigningKey = new byte[64];
         byte[] signSeed = new byte[32];
@@ -171,14 +171,14 @@ public class Test
                 invocable.invokeFunction("fromByteArray", signSeed)));
         byte[] jsSecretSignKey = Arrays.copyOfRange(jsSignPair, 32, 96);
         byte[] jsPublicSignKey = Arrays.copyOfRange(jsSignPair, 0, 32);
-        if (!Arrays.equals(secretSigningKey, jsSecretSignKey)) {
+        if (!Arrays.equals(secretSigningKey, jsSecretSignKey))
             throw new IllegalStateException("Signing key generation invalid, different secret keys!");
-        }
-        if (!Arrays.equals(publicSigningKey, jsPublicSignKey)) {
+        if (!Arrays.equals(publicSigningKey, jsPublicSignKey))
             throw new IllegalStateException("Signing key generation invalid, different public keys!");
-        }
+        if (!Arrays.equals(publicSigningKey, Arrays.copyOfRange(secretSigningKey, 32, 64)))
+            throw new IllegalStateException("Signing public key != second half of secret key!");
 
-
+        // sign
         byte[] sig = TweetNaCl.crypto_sign(message, secretSigningKey);
         byte[] sig2 = signMessage(message, secretSigningKey);
         if (!Arrays.equals(sig, sig2)) {
@@ -187,6 +187,7 @@ public class Test
             throw new IllegalStateException("Signatures not equal! " + bytesToHex(sig) + " != " + bytesToHex(sig2));
         }
 
+        // unsign
         byte[] unsigned = TweetNaCl.crypto_sign_open(sig, publicSigningKey);
         if (!Arrays.equals(unsigned, message))
             throw new IllegalStateException("J: Unsigned message != original! ");
