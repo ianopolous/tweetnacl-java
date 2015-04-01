@@ -9,21 +9,19 @@ public class NativeTweetNacl {
         System.loadLibrary("tweetnacl");
     }
 
-    public static native long ld32(int[] b);
+    public static native int ld32(byte[] b);
 
 
     public static void main(String[] args) {
         NativeTweetNacl nacl = new NativeTweetNacl();
         Random random = new Random();
 
-        int[] b = new int[8];
+        byte[] b = new byte[16];
+        random.nextBytes(b);
 
-        for (int i=0; i < b.length; i++) {
-            b[i] = (char) random.nextInt();
-            System.out.print(b[i] +",");
-        }
-        System.out.println();
-        long x = nacl.ld32(b);
-        System.out.println(x);
+        int jni = nacl.ld32(b);
+        int java = TweetNaCl.ld32(b, 0);
+        
+        System.out.println(jni + ", "+ java);
     }
 }

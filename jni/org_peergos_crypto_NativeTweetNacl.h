@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
  * Method:    ld32
- * Signature: ([I)J
+ * Signature: ([B)I
  */
-JNIEXPORT jlong JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
-  (JNIEnv *, jclass, jintArray);
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
+  (JNIEnv *, jclass, jbyteArray);
 
 #ifdef __cplusplus
 }

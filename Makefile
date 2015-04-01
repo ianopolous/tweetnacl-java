@@ -4,9 +4,9 @@ CP_SPACE = .
 
 .PHONY: clean
 clean:
-	rm -r build
-	rm libtweetnacl.so
-	rm Test.jar
+	rm -fr build
+	rm -f libtweetnacl.so
+	rm -f Test.jar
 
 .PHONY: compile 
 compile: 
@@ -26,7 +26,7 @@ test: compile
 .PHONY: jni
 jni: compile
 	javah -jni -classpath build -d jni org.peergos.crypto.NativeTweetNacl
-	gcc  -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Ijni -shared -o libtweetnacl.so jni/org_peergos_crypto_NativeTweetNacl.c
+	gcc -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Ijni -Inative -shared -o libtweetnacl.so jni/org_peergos_crypto_NativeTweetNacl.c
 		
 
 

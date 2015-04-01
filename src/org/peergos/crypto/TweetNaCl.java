@@ -102,7 +102,7 @@ public class TweetNaCl {
 
     private static int L32(int x,int c) { return (x << c) | (x >>> (32 - c)); }
 
-    private static int ld32(byte[] x, int off)
+    public static int ld32(byte[] x, int off)
     {
         int u = x[off + 3] & 0xff;
         u = (u<<8)|(x[off + 2] & 0xff);
