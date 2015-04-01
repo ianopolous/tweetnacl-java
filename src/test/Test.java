@@ -148,15 +148,21 @@ public class Test
     }
 
     public static void main(String[] args) throws Exception {
-        int n = 10;
-        int max = 5*1024;
+        if (args.length < 2) {
+            System.out.println("Run with:");
+            System.out.println("         java -jar Test.jar $k $n");
+            System.out.println("Where $k is the size in KiB of the message, and $n is the number of random keypairs to try");
+            return;
+        }
+        int n = Integer.parseInt(args[1]);
+        int max = Integer.parseInt(args[0])*1024;
         for (int i=0; i < n; i++) {
             byte[] publicBoxingKey = new byte[32];
             byte[] secretBoxingKey = new byte[32];
             prng.nextBytes(secretBoxingKey);
             TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, true);
 
-            byte[] message = new byte[prng.nextInt(max)];
+            byte[] message = new byte[max];
             prng.nextBytes(message);
 
             // box
@@ -221,6 +227,6 @@ public class Test
             if (n == 1)
                 System.out.println("Passed unsign tests.");
         }
-        System.out.println("Passed all tests for "+n +" sets of random key pairs and random mesages up to "+max+" bytes long!");
+        System.out.println("Passed all tests for "+n +" sets of random key pairs and random mesages "+max+" bytes long!");
     }
 }
