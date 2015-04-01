@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
   (JNIEnv *, jclass, jbyteArray);
 
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_box_keypair
+ * Signature: ([B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1keypair
+  (JNIEnv *, jclass, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif
