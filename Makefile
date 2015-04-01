@@ -2,6 +2,9 @@ CP = `find lib -name "*.jar" -printf %p:`
 JAVA_BUILD_OPTS = -g -source 1.8 -target 1.8 -cp .:$(CP)
 CP_SPACE = .
 
+.PHONY: def
+def: clean compile test
+
 .PHONY: clean
 clean:
 	rm -fr build
@@ -14,7 +17,7 @@ compile:
 	javac $(JAVA_BUILD_OPTS) -d build `find src -name \*.java`
 
 .PHONY: test 
-test: compile
+test: 
 	echo "Name: TweetNaCl.java Tests" > def.manifest
 	echo "Main-Class: test.Test" >> def.manifest
 	echo "Build-Date: " `date` >> def.manifest
