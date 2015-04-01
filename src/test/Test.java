@@ -150,10 +150,12 @@ public class Test
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
             System.out.println("Run with:");
-            System.out.println("         java -jar Test.jar $k $n");
-            System.out.println("Where $k is the size in KiB of the message, and $n is the number of random keypairs to try");
+            System.out.println("         java -jar Test.jar $k $n [-random]");
+            System.out.println("Where $k is the size in KiB of the message, and $n is the number of random keypairs to try. -random randomises the PRNG");
             return;
         }
+        if (args.length > 2 && args[2].equals("-random"))
+            prng.setSeed(System.currentTimeMillis());
         int n = Integer.parseInt(args[1]);
         int max = Integer.parseInt(args[0])*1024;
         for (int i=0; i < n; i++) {
