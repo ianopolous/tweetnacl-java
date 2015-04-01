@@ -13,3 +13,7 @@ test:
 	jar -cfm Test.jar def.manifest \
 	    -C build org -C build test
 	rm -f def.manifest
+
+.PHONY: jni
+jni:
+	javah -jni -classpath out/production/tweetnacl-java/ -d jni org.peergos.crypto.NativeTweetNacl
