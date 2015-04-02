@@ -1,5 +1,7 @@
 package org.peergos.crypto;
 
+import test.*;
+
 import java.util.Arrays;
 import java.util.Random;
 /* Ported from the original C by Ian Preston and Chris Boddy
@@ -201,7 +203,7 @@ public class TweetNaCl {
             for (i=0;i < 64; ++i) c[cOff + i] = (byte)((m != null ? m[mOff + i]:0)^ x[i]);
             u = 1;
             for (i = 8;i < 16;++i) {
-                u += (int) z[i];
+                u += 0xff & z[i];
                 z[i] = (byte)u;
                 u >>= 8;
             }
