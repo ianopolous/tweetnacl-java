@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
- * Method:    ld32
- * Signature: ([B)I
- */
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
-  (JNIEnv *, jclass, jbyteArray);
-
-/*
- * Class:     org_peergos_crypto_NativeTweetNacl
  * Method:    crypto_box_keypair
  * Signature: ([B[B)I
  */
@@ -25,11 +17,19 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1keyp
 
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
- * Method:    crypto_scalarmult_base
- * Signature: ([B[B)I
+ * Method:    crypto_box_open
+ * Signature: ([B[BJ[B[B[B)I
  */
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1scalarmult_1base
-  (JNIEnv *, jclass, jbyteArray, jbyteArray);
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1open
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_box
+ * Signature: ([B[BJ[B[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
 
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
@@ -57,19 +57,19 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1sign_1key
 
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
- * Method:    crypto_box_open
- * Signature: ([B[BJ[B[B[B)I
+ * Method:    crypto_scalarmult_base
+ * Signature: ([B[B)I
  */
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1open
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1scalarmult_1base
+  (JNIEnv *, jclass, jbyteArray, jbyteArray);
 
 /*
  * Class:     org_peergos_crypto_NativeTweetNacl
- * Method:    crypto_box
- * Signature: ([B[BJ[B[B[B)I
+ * Method:    ld32
+ * Signature: ([B)I
  */
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
+  (JNIEnv *, jclass, jbyteArray);
 
 #ifdef __cplusplus
 }
