@@ -21,7 +21,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
 
 
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1keypair
-(JNIEnv * env, jclass class , jbyteArray publicKey, jbyteArray privateKey) {
+(JNIEnv * env, jclass class , jbyteArray publicKey, jbyteArray secretKey) {
 
         u8 pk[crypto_box_PUBLICKEYBYTES];
         u8 sk[crypto_box_SECRETKEYBYTES];
@@ -30,7 +30,52 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1keyp
 
         (*env)->SetByteArrayRegion(env,publicKey,0,crypto_box_PUBLICKEYBYTES,pk);
         (*env)->SetByteArrayRegion(env,secretKey,0,crypto_box_SECRETKEYBYTES,sk);
-        return rc;
-}
+        return (jint) rc;
 }
 
+
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1scalarmult_1base
+(JNIEnv * env, jclass class , jbyteArray qin, jbyteArray nin) {
+
+        u8 n[crypto_scalarmult_SCALARBYTES];
+        u8 q[crypto_scalarmult_BYTES];
+        (*env)->GetByteArrayRegion(env, nin, 0, crypto_scalarmult_SCALARBYTES, n);
+        int rc = crypto_scalarmult_base(q,n);
+        (*env)->SetByteArrayRegion(env, qin, 0, crypto_scalarmult_BYTES, q);
+        return (jint) rc;
+}
+
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1sign_1open
+(JNIEnv *, jclass, jbyteArray, jlongArray, jbyteArray, jlong, jbyteArray);
+
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_sign
+ * Signature: ([B[J[BJ[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1sign
+(JNIEnv *, jclass, jbyteArray, jlongArray, jbyteArray, jlong, jbyteArray);
+
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_sign_keypair
+ * Signature: ([B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1sign_1keypair
+(JNIEnv *, jclass, jbyteArray, jbyteArray);
+
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_box_open
+ * Signature: ([B[BJ[B[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1open
+(JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     org_peergos_crypto_NativeTweetNacl
+ * Method:    crypto_box
+ * Signature: ([B[BJ[B[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box
+(JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray, jbyteArray);
