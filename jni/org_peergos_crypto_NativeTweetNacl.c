@@ -15,22 +15,22 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_ld32
         jsize length = (*env)->GetArrayLength(env, param);
         u8 array[length];
         (*env)->GetByteArrayRegion(env, param ,0, length, array);
-        
+
         return ld32(array);
 }
 
 
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_NativeTweetNacl_crypto_1box_1keypair
-  (JNIEnv * env, jclass class , jbyteArray jy, jbyteArray jx) {
+(JNIEnv * env, jclass class , jbyteArray publicKey, jbyteArray privateKey) {
 
-        jsize jy_length = (*env)->GetArrayLength(env, jy);
-        u8 y[jy_length];
-        (*env)->GetByteArrayRegion(env, jy ,0, jy_length, y);
+        u8 pk[crypto_box_PUBLICKEYBYTES];
+        u8 sk[crypto_box_SECRETKEYBYTES];
 
-        jsize jx_length = (*env)->GetArrayLength(env, jx);
-        u8 x[jx_length];
-        (*env)->GetByteArrayRegion(env, jx ,0, jx_length, x);
+        int rc = crypto_box_keypair(pk,sk);
 
-        return crypto_box_keypair(y,x); 
-  }
+        (*env)->SetByteArrayRegion(env,publicKey,0,crypto_box_PUBLICKEYBYTES,pk);
+        (*env)->SetByteArrayRegion(env,secretKey,0,crypto_box_SECRETKEYBYTES,sk);
+        return rc;
+}
+}
 
