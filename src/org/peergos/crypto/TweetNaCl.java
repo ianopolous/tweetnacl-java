@@ -1353,7 +1353,7 @@ public class TweetNaCl {
         }
 
         private void cryptoBoxTests() {
-            for (int i=5; i < 20; i++) {
+            for (int i=5; i < 24; i++) {
                 int size = (int) Math.pow(2, i);
                 size += prng.nextInt(size);
                 int rounds = 10;
