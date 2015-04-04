@@ -86,14 +86,18 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1open
 }
 
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign
-(JNIEnv * env, jclass class, jbyteArray sm, jlongArray smlen, jbyteArray m, jlong n, jbyteArray sk) {
+(JNIEnv * env, jclass class, jbyteArray sm, jlong smlen, jbyteArray m, jlong n, jbyteArray sk) {
         u8* sm_c = toArray(env, sm);
-        u64* smlen_c = toArray_l(env, smlen);
+        u64 smlen_c= (u64) smlen;
         u8* m_c = toArray(env, m);
         u8* sk_c = toArray(env, sk);
 
-        int rc = crypto_sign(sm_c, smlen_c, m_c, (long) n, sk_c);
-        copy(env, sm_c, sm, 0, LENGTH(sm_c));
+        int rc = crypto_sign(sm_c, &smlen_c, m_c, (long) n, sk_c);
+        copy(env, sm_c, sm, 0, length(env, sm));
+
+        free(sm_c);
+        free(m_c);
+        free(sk_c);
         return (jint) rc;
 }
 

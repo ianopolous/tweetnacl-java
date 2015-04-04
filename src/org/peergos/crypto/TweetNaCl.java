@@ -1267,6 +1267,37 @@ public class TweetNaCl {
             return Arrays.copyOf(of, of.length);
         }
 
+
+        private static void cryptoSignTest(int nRound, int messageLength) {
+            byte[] publicSigningKey = new byte[32];
+            byte[] secretSigningKey = new byte[64];
+
+            byte[] message = new byte[messageLength];
+
+            int signedLength = message.length + TweetNaCl.SIGNATURE_SIZE_BYTES;
+
+            byte[] javaSignedMessage = new byte[signedLength];
+            byte[] jniSignedMessage = new byte[signedLength];
+
+            for (int iRound =0; iRound < nRound; iRound++) {
+                boolean isSeeded = false;
+                TweetNaCl.crypto_sign_keypair(publicSigningKey, secretSigningKey, isSeeded);
+                prng.nextBytes(message);
+                int javaRc = TweetNaCl.crypto_sign(javaSignedMessage, copy(message), message.length, copy(secretSigningKey));
+                int jniRc = JniTweetNacl.crypto_sign(jniSignedMessage, signedLength, copy(message), message.length, secretSigningKey);
+
+                if (javaRc != 0)
+                    throw new IllegalStateException("non-zero java return code " + javaRc);
+                if (jniRc != 0)
+                    throw new IllegalStateException("non-zero jni return code " + jniRc);
+
+                boolean test = Arrays.equals(javaSignedMessage, jniSignedMessage);
+                assertTrue("crypto-sign round " + iRound +" message length ", test);
+            }
+        }
+
+
+
         private static boolean cryptoBoxOpenTest(byte[] publicKey, byte[] secretKey, byte[] cipher, byte[] nonce) {
 
             byte[] paddedCipher = new byte[cipher.length + 16];
@@ -1322,43 +1353,45 @@ public class TweetNaCl {
             return Arrays.equals(javaCipherText, jniCipherText);
         }
 
-        private void cryptoBoxTest(int rounds, int messageLength) {
+        private static void cryptoBoxTest(int nRound, int messageLength) {
             byte[] message = new byte[messageLength];
             byte[] publicBoxingKey = new byte[BOX_PUBLIC_KEY_BYTES];
             byte[] secretBoxingKey = new byte[BOX_SECRET_KEY_BYTES];
 
-            for (int iRound=0; iRound < rounds; iRound++) {
+            for (int iRound=0; iRound < nRound; iRound++) {
                 boolean isSeeded = false;
                 TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, isSeeded);
                 prng.nextBytes(message);
                 boolean test = cryptoBoxTest(publicBoxingKey, secretBoxingKey, message);
-                assertTrue("Round "+ iRound +" with message length "+ messageLength, test);
+                assertTrue("crypto-box round "+ iRound +" with message length "+ messageLength, test);
             }
         }
 
-        private void cryptoBoxOpenTest(int rounds, int messageLength) {
+        private static void cryptoBoxOpenTest(int nRound, int messageLength) {
             byte[] message = new byte[messageLength];
             byte[] publicBoxingKey = new byte[BOX_PUBLIC_KEY_BYTES];
             byte[] secretBoxingKey = new byte[BOX_SECRET_KEY_BYTES];
 
-            for (int iRound=0; iRound < rounds; iRound++) {
+            for (int iRound=0; iRound < nRound; iRound++) {
                 boolean isSeeded = false;
                 TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, isSeeded);
                 byte[] nonce = nonce();
                 byte[] cipher = TweetNaCl.crypto_box(message, copy(nonce), copy(publicBoxingKey), copy(secretBoxingKey));
 
                 boolean test = cryptoBoxOpenTest(publicBoxingKey, secretBoxingKey, cipher, nonce);
-                assertTrue("Round "+ iRound +" with message length "+ messageLength, test);
+                assertTrue("crypto-box-open round "+ iRound +" with message length "+ messageLength, test);
             }
         }
 
-        private void cryptoBoxTests() {
+        private static void cryptoBoxTests() {
+            int nRound = 10;
             for (int i=5; i < 24; i++) {
                 int size = (int) Math.pow(2, i);
                 size += prng.nextInt(size);
-                int rounds = 10;
-                cryptoBoxTest(rounds, size);
-                cryptoBoxOpenTest(rounds, size);
+
+                cryptoBoxTest(nRound, size);
+                cryptoBoxOpenTest(nRound, size);
+                cryptoSignTest(nRound, size);
             }
         }
 
