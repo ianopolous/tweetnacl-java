@@ -23,8 +23,4 @@ public class JniTweetNacl {
 
     public static native int ld32(byte[] b);
 
-    public static void main(String[] args) {
-        JniTweetNacl jni = new JniTweetNacl();
-        int i = jni.ld32(new byte[64]);
-    }
 }

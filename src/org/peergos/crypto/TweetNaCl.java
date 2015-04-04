@@ -1,7 +1,10 @@
 package org.peergos.crypto;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
+
 import static org.junit.Assert.*;
 
 /* Ported from the original C by Ian Preston and Chris Boddy
@@ -354,7 +357,7 @@ public class TweetNaCl {
         if (d < 32) return -1;
         crypto_stream(x,32,n,k);
         if (crypto_onetimeauth_verify(c, 16,c, 32,d - 32,x) != 0) return -1;
-        crypto_stream_xor(m,c,d,n,k);
+        crypto_stream_xor(m, c, d, n, k);
         for (i=0;i < 32;++i)m[i] = 0;
         return 0;
     }
@@ -1177,7 +1180,7 @@ public class TweetNaCl {
                 den2 = new long[GF_LEN], den4 = new long[GF_LEN], den6 = new long[GF_LEN];
         set25519(r[2],gf1);
         unpack25519(r[1],p);
-        S(num,r[1]);
+        S(num, r[1]);
         M(den, 0, num, 0, D, 0);
         Z(num,num,r[2]);
         A(den,r[2],den);
@@ -1188,7 +1191,7 @@ public class TweetNaCl {
         M(t, 0, den6, 0, num, 0);
         M(t, 0, t, 0, den, 0);
 
-        pow2523(t,t);
+        pow2523(t, t);
         M(t, 0, t, 0, num, 0);
         M(t, 0, t, 0, den, 0);
         M(t, 0, t, 0, den, 0);
@@ -1198,7 +1201,7 @@ public class TweetNaCl {
         M(chk, 0, chk, 0, den, 0);
         if (neq25519(chk, num) != 0) M(r[0], 0, r[0], 0, I, 0);
 
-        S(chk,r[0]);
+        S(chk, r[0]);
         M(chk, 0, chk, 0, den, 0);
         if (neq25519(chk, num) != 0) return -1;
 
@@ -1266,34 +1269,27 @@ public class TweetNaCl {
             return Arrays.copyOf(of, of.length);
         }
 
-        private boolean cryptoBoxText(byte[] publicKey, byte[] secretKey, byte[] message) {
+        private boolean cryptoBoxTest(byte[] publicKey, byte[] secretKey, byte[] message) {
             byte[] nonce = nonce();
             byte[] cipherText = new byte[SECRETBOX_INTERNAL_OVERHEAD_BYTES + message.length];
             byte[] paddedMessage = new byte[SECRETBOX_INTERNAL_OVERHEAD_BYTES + message.length];
             System.arraycopy(message, 0, paddedMessage, SECRETBOX_INTERNAL_OVERHEAD_BYTES, message.length);
-            Arrays.copyOfRange(cipherText, 16, cipherText.length);
+
             return cryptoBoxTest(cipherText, paddedMessage, paddedMessage.length, nonce, publicKey, secretKey);
         }
 
         private static boolean cryptoBoxTest(byte[] cipherText, byte[] paddedMessage, long paddedMessageLength, byte[] nonce, byte[] theirPublicBoxingKey, byte[] ourSecretBoxingKey) {
 
             byte[] javaCipherText = copy(cipherText);
-            byte[] javaMessage = copy(paddedMessage);
             long javaMessageLength = paddedMessageLength;
-            byte[] javaNonce= copy(nonce);
-            byte[] javaPublicKey = copy(theirPublicBoxingKey);
-            byte[] javaSecretKey = copy(ourSecretBoxingKey);
 
             byte[] jniCipherText = copy(cipherText);
-            byte[] jniMessage = copy(paddedMessage);
             long jniMessageLength = paddedMessageLength;
-            byte[] jniNonce= copy(nonce);
-            byte[] jniPublicKey = copy(theirPublicBoxingKey);
-            byte[] jniSecretKey = copy(ourSecretBoxingKey);
 
-            int javaRc = TweetNaCl.crypto_box(javaCipherText, javaMessage, javaMessageLength, javaNonce, javaPublicKey, javaSecretKey);
 
-            int jniRc = JniTweetNacl.crypto_box(jniCipherText, jniMessage, jniMessageLength, jniNonce, jniPublicKey, jniSecretKey);
+            int javaRc = TweetNaCl.crypto_box(javaCipherText, copy(paddedMessage), javaMessageLength, copy(nonce), copy(theirPublicBoxingKey), copy(ourSecretBoxingKey));
+
+            int jniRc = JniTweetNacl.crypto_box(jniCipherText, copy(paddedMessage), jniMessageLength, copy(nonce), copy(theirPublicBoxingKey), copy(ourSecretBoxingKey));
 
             if (javaRc != 0)
                 throw new IllegalStateException("non-zero java return code");
@@ -1313,16 +1309,23 @@ public class TweetNaCl {
             byte[] secretBoxingKey = new byte[BOX_SECRET_KEY_BYTES];
 
             for (int iRound=0; iRound < rounds; iRound++) {
-                prng.nextBytes(publicBoxingKey);
-                prng.nextBytes(secretBoxingKey);
+                boolean isSeeded = false;
+                TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, isSeeded);
                 prng.nextBytes(message);
-                boolean test = cryptoBoxText(publicBoxingKey, secretBoxingKey, message);
-                assertTrue("round "+ iRound +" with message length "+ messageLength, test);
+                boolean test = cryptoBoxTest(publicBoxingKey, secretBoxingKey, message);
+                assertTrue("Round "+ iRound +" with message length "+ messageLength, test);
             }
         }
 
+        private void cryptoBoxTest() {
+            for (int i=0; i < 20; i++) {
+                int size = (int) Math.pow(2, i);
+                size += prng.nextInt(16);
+                cryptoBoxTest(10, size);
+            }
+        }
         @org.junit.Test public void all() {
-            cryptoBoxTest(10, 32);
+            cryptoBoxTest();
         }
 
     }

@@ -1,10 +1,9 @@
-#include <jni.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <jni.h>
 #include "devurandom.c"
 #include "tweetnacl.c"
 #include "org_peergos_crypto_JniTweetNacl.h"
-
-#define LENGTH(x) sizeof(x) / sizeof(x[0])
 
 typedef unsigned char u8;
 typedef unsigned long u32;
@@ -21,9 +20,10 @@ int length(JNIEnv * env, jbyteArray array) {
 
 u8* toArray(JNIEnv * env, jbyteArray array) {
         int len = length(env,array);
-        u8 array_c[len];
+        u8 *array_c = (u8*) malloc(len * 8);
         (*env)->GetByteArrayRegion(env, array, 0, len, array_c);
         return array_c;
+
 }
 
 u64* toArray_l(JNIEnv * env, jlongArray array) {
@@ -124,15 +124,22 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1open
 }
 
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box
-(JNIEnv * env, jclass class, jbyteArray m, jbyteArray c, jlong d, jbyteArray n, jbyteArray y, jbyteArray x) {
+(JNIEnv * env, jclass class, jbyteArray c, jbyteArray m, jlong d, jbyteArray n, jbyteArray y, jbyteArray x) {
 
-        u8* m_c = toArray(env,m);
         u8* c_c = toArray(env,c);
+        u8* m_c = toArray(env,m);
         u8* n_c = toArray(env,n);
         u8* y_c = toArray(env,y);
         u8* x_c = toArray(env,x);
+          
+        int rc = crypto_box(c_c, m_c, d, n_c, y_c, x_c);
+        copy(env, c_c, c, 0, length(env, c)); 
         
-        int rc = crypto_box(m_c, c_c, (long) d, n_c, y_c, x_c);
-        copy(env, c_c, c, 0, LENGTH(c_c)); 
+        free(m_c);
+        free(c_c);
+        free(n_c);
+        free(y_c);
+        free(x_c);
+
         return (jint) rc;
 }
