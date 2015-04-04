@@ -1,9 +1,6 @@
 package org.peergos.crypto;
 
-import java.util.Random;
-import java.util.*;
-
-public class NativeTweetNacl {
+public class JniTweetNacl {
     static {
         System.loadLibrary("tweetnacl");
     }
@@ -26,9 +23,8 @@ public class NativeTweetNacl {
 
     public static native int ld32(byte[] b);
 
-
     public static void main(String[] args) {
-        NativeTweetNacl jni = new NativeTweetNacl();
-
+        JniTweetNacl jni = new JniTweetNacl();
+        int i = jni.ld32(new byte[32]);
     }
 }

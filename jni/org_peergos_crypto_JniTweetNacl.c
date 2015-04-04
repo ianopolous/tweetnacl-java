@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "devurandom.c"
 #include "tweetnacl.c"
-#include "org_peergos_crypto_NativeTweetNacl.h"
+#include "org_peergos_crypto_JniTweetNacl.h"
 
 #define LENGTH(x) sizeof(x) / sizeof(x[0])
 

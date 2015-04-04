@@ -28,8 +28,8 @@ test:
 
 .PHONY: jni
 jni: compile
-	javah -jni -classpath build -d jni org.peergos.crypto.NativeTweetNacl
-	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Inative -Ijni -shared -o libtweetnacl.so jni/org_peergos_crypto_NativeTweetNacl.c
+	javah -jni -classpath build -d jni org.peergos.crypto.JniTweetNacl
+	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Inative -Ijni -shared -o libtweetnacl.so jni/org_peergos_crypto_JniTweetNacl.c
 		
 
 
