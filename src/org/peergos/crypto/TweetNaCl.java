@@ -1291,7 +1291,6 @@ public class TweetNaCl {
             byte[] jniPublicKey = copy(theirPublicBoxingKey);
             byte[] jniSecretKey = copy(ourSecretBoxingKey);
 
-
             int javaRc = TweetNaCl.crypto_box(javaCipherText, javaMessage, javaMessageLength, javaNonce, javaPublicKey, javaSecretKey);
 
             int jniRc = JniTweetNacl.crypto_box(jniCipherText, jniMessage, jniMessageLength, jniNonce, jniPublicKey, jniSecretKey);

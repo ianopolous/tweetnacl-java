@@ -25,6 +25,6 @@ public class JniTweetNacl {
 
     public static void main(String[] args) {
         JniTweetNacl jni = new JniTweetNacl();
-        int i = jni.ld32(new byte[32]);
+        int i = jni.ld32(new byte[64]);
     }
 }
