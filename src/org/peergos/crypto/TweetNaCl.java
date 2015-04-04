@@ -1267,6 +1267,44 @@ public class TweetNaCl {
             return Arrays.copyOf(of, of.length);
         }
 
+        private static void cryptoSignOpenTest(int nRound, int messageLength) {
+            byte[] publicKey = new byte[32];
+            byte[] secretKey = new byte[64];
+
+            byte[] message = new byte[messageLength];
+
+            for (int iRound = 0; iRound < nRound; iRound++) {
+                prng.nextBytes(message);
+
+                boolean isSeeded = false;
+                TweetNaCl.crypto_sign_keypair(publicKey, secretKey, isSeeded);
+//                JniTweetNacl.crypto_sign_keypair(publicKey, secretKey);
+
+                byte[] signedText = TweetNaCl.crypto_sign(message, secretKey);
+
+                int signedLength = signedText.length;
+                byte[] javaMessage = new byte[signedLength];
+                byte[] jniMessage = new byte[signedLength];
+
+                int javaRc = TweetNaCl.crypto_sign_open(javaMessage, copy(signedText), signedLength, copy(publicKey));
+                javaMessage = Arrays.copyOfRange(javaMessage, 64, javaMessage.length);
+
+                int jniRc = JniTweetNacl.crypto_sign_open(jniMessage, jniMessage.length, copy(signedText), signedLength, copy(publicKey));
+                jniMessage = Arrays.copyOfRange(jniMessage, 64, jniMessage.length);
+
+                if (javaRc != 0)
+                    throw new IllegalStateException("non-zero java return code " + javaRc);
+                if (jniRc != 0)
+                    throw new IllegalStateException("non-zero jni return code " + jniRc);
+
+                boolean test = Arrays.equals(jniMessage, javaMessage);
+                for (int i=0; i < javaMessage.length; i++)
+                    if (javaMessage[i] != jniMessage[i])
+                        System.out.println("pos " + i + " : java " + javaMessage[i] + " vs jni " + jniMessage[i]);
+                assertTrue("crypto sign-open round " + iRound +", message length "+ messageLength, test);
+            }
+        }
+
 
         private static void cryptoSignTest(int nRound, int messageLength) {
             byte[] publicSigningKey = new byte[32];
@@ -1282,6 +1320,7 @@ public class TweetNaCl {
             for (int iRound =0; iRound < nRound; iRound++) {
                 boolean isSeeded = false;
                 TweetNaCl.crypto_sign_keypair(publicSigningKey, secretSigningKey, isSeeded);
+
                 prng.nextBytes(message);
                 int javaRc = TweetNaCl.crypto_sign(javaSignedMessage, copy(message), message.length, copy(secretSigningKey));
                 int jniRc = JniTweetNacl.crypto_sign(jniSignedMessage, signedLength, copy(message), message.length, secretSigningKey);
@@ -1290,6 +1329,7 @@ public class TweetNaCl {
                     throw new IllegalStateException("non-zero java return code " + javaRc);
                 if (jniRc != 0)
                     throw new IllegalStateException("non-zero jni return code " + jniRc);
+
 
                 boolean test = Arrays.equals(javaSignedMessage, jniSignedMessage);
                 assertTrue("crypto-sign round " + iRound +" message length ", test);
@@ -1383,20 +1423,22 @@ public class TweetNaCl {
             }
         }
 
-        private static void cryptoBoxTests() {
-            int nRound = 10;
-            for (int i=5; i < 24; i++) {
-                int size = (int) Math.pow(2, i);
-                size += prng.nextInt(size);
 
-                cryptoBoxTest(nRound, size);
-                cryptoBoxOpenTest(nRound, size);
-                cryptoSignTest(nRound, size);
-            }
-        }
+        public static int N_ROUND = 10;
+        public static int MIN_SIZE_EXP = 5;
+        public static int MAX_SIZE_EXP = 24;
 
         @org.junit.Test public void all() {
-            cryptoBoxTests();
+
+            for (int exp = MIN_SIZE_EXP; exp < MAX_SIZE_EXP; exp++) {
+                int size = (int) Math.pow(2, exp);
+                size += prng.nextInt(size);
+
+                cryptoBoxTest(N_ROUND, size);
+                cryptoBoxOpenTest(N_ROUND, size);
+                cryptoSignTest(N_ROUND, size);
+                cryptoSignOpenTest(N_ROUND, size);
+            }
         }
 
     }

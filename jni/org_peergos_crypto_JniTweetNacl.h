@@ -34,10 +34,10 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box
 /*
  * Class:     org_peergos_crypto_JniTweetNacl
  * Method:    crypto_sign_open
- * Signature: ([B[J[BJ[B)I
+ * Signature: ([BJ[BJ[B)I
  */
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1open
-  (JNIEnv *, jclass, jbyteArray, jlongArray, jbyteArray, jlong, jbyteArray);
+  (JNIEnv *, jclass, jbyteArray, jlong, jbyteArray, jlong, jbyteArray);
 
 /*
  * Class:     org_peergos_crypto_JniTweetNacl

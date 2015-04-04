@@ -12,7 +12,7 @@ public class JniTweetNacl {
     public static native int crypto_box(byte[] c, byte[] m, long d, byte[] n, byte[] y, byte[] x);
 
 
-    public static native int crypto_sign_open(byte[] message, long[] mlen, byte[] secretKey, long n, byte[] publicKey);
+    public static native int crypto_sign_open(byte[] m, long mlen, byte[] sm, long n, byte[] pk);
 
     public static native int crypto_sign(byte[] sm, long smlen, byte[] m, long n, byte[] sk);
 

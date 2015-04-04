@@ -11,9 +11,6 @@ typedef unsigned long long u64;
 typedef long long i64;
 typedef i64 gf[16];
 
-int length_l(JNIEnv * env, jlongArray array) {
-        return (int) (*env)->GetArrayLength(env, array);
-}
 int length(JNIEnv * env, jbyteArray array) {
         return (int) (*env)->GetArrayLength(env, array);
 }
@@ -24,13 +21,6 @@ u8* toArray(JNIEnv * env, jbyteArray array) {
         (*env)->GetByteArrayRegion(env, array, 0, len, array_c);
         return array_c;
 
-}
-
-u64* toArray_l(JNIEnv * env, jlongArray array) {
-        int len = length_l(env,array);
-        u64 array_c[len];
-        (*env)->GetLongArrayRegion(env, array, 0, len, array_c);
-        return array_c;
 }
 
 void copy(JNIEnv * env, u8* from, jbyteArray to, int offset, int length) {
@@ -73,15 +63,20 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1scalarmult_1
 }
 
 JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1open
-(JNIEnv * env, jclass class, jbyteArray message, jlongArray mlen,  jbyteArray secretBoxingKey, jlong n, jbyteArray publicKey) {
+(JNIEnv * env, jclass class, jbyteArray message, jlong mlen,  jbyteArray sm, jlong n, jbyteArray publicKey) {
         
         u8* message_c = toArray(env, message); 
-        u64* mlen_c = toArray_l(env, mlen); 
-        u8* secretBoxingKey_c = toArray(env, secretBoxingKey); 
+        u64 mlen_c= (u64) mlen;
+        u8* sm_c = toArray(env, sm); 
         u8* publicKey_c = toArray(env, publicKey); 
-        int rc = crypto_sign_open(message_c, mlen_c, secretBoxingKey_c, (long) n, publicKey_c);
+        int rc = crypto_sign_open(message_c, &mlen_c, sm_c, n, publicKey_c);
         
-        copy(env, message_c, message, 0, LENGTH(message_c));
+        copy(env, message_c, message, 0, length(env, message));
+
+        free(message_c);
+        free(sm_c);
+        free(publicKey_c);
+        
         return (jint) rc;
 }
 
@@ -108,8 +103,11 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1keypai
         u8* signingKey_c = toArray(env,signingKey);
 
         int rc = crypto_sign_keypair(publicKey_c, signingKey_c);
-        copy(env, signingKey_c, signingKey, 0, LENGTH(signingKey_c));
-        copy(env, publicKey_c, publicKey, 0, LENGTH(publicKey_c));
+        copy(env, signingKey_c, signingKey, 0, length(env, signingKey));
+        copy(env, publicKey_c, publicKey, 0, length(env, publicKey));
+
+        free(publicKey_c);
+        free(signingKey_c);
         return (jint) rc;
 }
 
