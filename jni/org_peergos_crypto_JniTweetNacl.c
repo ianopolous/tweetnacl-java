@@ -118,8 +118,13 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1open
         u8* y_c = toArray(env,y);
         u8* x_c = toArray(env,x);
         
-        int rc = crypto_box_open(message_c, cipher_c, (long) d, n_c, y_c, x_c);
-        copy(env, message_c, message, 0, LENGTH(message_c)); 
+        int rc = crypto_box_open(message_c, cipher_c, d, n_c, y_c, x_c);
+        copy(env, message_c, message, 0, length(env, message)); 
+        free(message_c);
+        free(cipher_c);
+        free(n_c);
+        free(y_c);
+        free(x_c);
         return (jint) rc;
 }
 

@@ -1,9 +1,7 @@
 package org.peergos.crypto;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
@@ -1269,7 +1267,29 @@ public class TweetNaCl {
             return Arrays.copyOf(of, of.length);
         }
 
-        private boolean cryptoBoxTest(byte[] publicKey, byte[] secretKey, byte[] message) {
+        private static boolean cryptoBoxOpenTest(byte[] publicKey, byte[] secretKey, byte[] cipher, byte[] nonce) {
+
+            byte[] paddedCipher = new byte[cipher.length + 16];
+            System.arraycopy(cipher, 0, paddedCipher, 16, cipher.length);
+
+            byte[] javaRawText = new byte[paddedCipher.length];
+            int javaRc = TweetNaCl.crypto_box_open(javaRawText, copy(paddedCipher), paddedCipher.length, copy(nonce), copy(publicKey), copy(secretKey));
+
+            byte[] jniRawText = new byte[paddedCipher.length];
+            int jniRc = JniTweetNacl.crypto_box_open(jniRawText, copy(paddedCipher), paddedCipher.length, copy(nonce), copy(publicKey), copy(secretKey));
+
+            if (javaRc != 0)
+                throw new IllegalStateException("non-zero java return code " + javaRc);
+            if (jniRc != 0)
+                throw new IllegalStateException("non-zero jni return code " + jniRc);
+
+            javaRawText = Arrays.copyOfRange(javaRawText, 32, javaRawText.length);
+            jniRawText = Arrays.copyOfRange(jniRawText, 32, jniRawText.length);
+
+            return Arrays.equals(javaRawText, jniRawText);
+        }
+
+        private static boolean cryptoBoxTest(byte[] publicKey, byte[] secretKey, byte[] message) {
             byte[] nonce = nonce();
             byte[] cipherText = new byte[SECRETBOX_INTERNAL_OVERHEAD_BYTES + message.length];
             byte[] paddedMessage = new byte[SECRETBOX_INTERNAL_OVERHEAD_BYTES + message.length];
@@ -1304,7 +1324,6 @@ public class TweetNaCl {
 
         private void cryptoBoxTest(int rounds, int messageLength) {
             byte[] message = new byte[messageLength];
-
             byte[] publicBoxingKey = new byte[BOX_PUBLIC_KEY_BYTES];
             byte[] secretBoxingKey = new byte[BOX_SECRET_KEY_BYTES];
 
@@ -1317,15 +1336,34 @@ public class TweetNaCl {
             }
         }
 
-        private void cryptoBoxTest() {
-            for (int i=0; i < 20; i++) {
-                int size = (int) Math.pow(2, i);
-                size += prng.nextInt(16);
-                cryptoBoxTest(10, size);
+        private void cryptoBoxOpenTest(int rounds, int messageLength) {
+            byte[] message = new byte[messageLength];
+            byte[] publicBoxingKey = new byte[BOX_PUBLIC_KEY_BYTES];
+            byte[] secretBoxingKey = new byte[BOX_SECRET_KEY_BYTES];
+
+            for (int iRound=0; iRound < rounds; iRound++) {
+                boolean isSeeded = false;
+                TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, isSeeded);
+                byte[] nonce = nonce();
+                byte[] cipher = TweetNaCl.crypto_box(message, copy(nonce), copy(publicBoxingKey), copy(secretBoxingKey));
+
+                boolean test = cryptoBoxOpenTest(publicBoxingKey, secretBoxingKey, cipher, nonce);
+                assertTrue("Round "+ iRound +" with message length "+ messageLength, test);
             }
         }
+
+        private void cryptoBoxTests() {
+            for (int i=5; i < 20; i++) {
+                int size = (int) Math.pow(2, i);
+                size += prng.nextInt(size);
+                int rounds = 10;
+                cryptoBoxTest(rounds, size);
+                cryptoBoxOpenTest(rounds, size);
+            }
+        }
+
         @org.junit.Test public void all() {
-            cryptoBoxTest();
+            cryptoBoxTests();
         }
 
     }
