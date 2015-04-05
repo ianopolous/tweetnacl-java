@@ -1290,7 +1290,7 @@ public class TweetNaCl {
                 javaMessage = Arrays.copyOfRange(javaMessage, 64, javaMessage.length);
 
                 int jniRc = JniTweetNacl.crypto_sign_open(jniMessage, message.length, copy(signedText), signedLength, copy(publicKey));
-                jniMessage = Arrays.copyOfRange(jniMessage, 64, jniMessage.length);
+                jniMessage = Arrays.copyOfRange(jniMessage, 0, jniMessage.length - 64);
 
                 if (javaRc != 0)
                     throw new IllegalStateException("non-zero java return code " + javaRc);
