@@ -3,7 +3,7 @@ JAVA_BUILD_OPTS = -g -source 1.8 -target 1.8 -cp .:$(CP)
 CP_SPACE = .
 
 .PHONY: def
-def: clean compile test
+def: clean compile jni test
 
 .PHONY: clean
 clean:
@@ -31,5 +31,7 @@ jni: compile
 	javah -jni -classpath build -d jni org.peergos.crypto.JniTweetNacl
 	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Inative -Ijni -shared -o libtweetnacl.so jni/org_peergos_crypto_JniTweetNacl.c
 		
-
+.PHONY: jni_test
+jni_tests: def 
+	java -Djava.library.path=. -cp "Test.jar:lib/*" test.TestRunner
 
