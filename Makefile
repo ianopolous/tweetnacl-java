@@ -17,7 +17,7 @@ compile:
 	javac $(JAVA_BUILD_OPTS) -d build `find src -name \*.java`
 
 .PHONY: test 
-test: 
+test: compile
 	echo "Name: TweetNaCl.java Tests" > def.manifest
 	echo "Main-Class: test.Test" >> def.manifest
 	echo "Build-Date: " `date` >> def.manifest
