@@ -1289,7 +1289,7 @@ public class TweetNaCl {
                 int javaRc = TweetNaCl.crypto_sign_open(javaMessage, copy(signedText), signedLength, copy(publicKey));
                 javaMessage = Arrays.copyOfRange(javaMessage, 64, javaMessage.length);
 
-                int jniRc = JniTweetNacl.crypto_sign_open(jniMessage, jniMessage.length, copy(signedText), signedLength, copy(publicKey));
+                int jniRc = JniTweetNacl.crypto_sign_open(jniMessage, message.length, copy(signedText), signedLength, copy(publicKey));
                 jniMessage = Arrays.copyOfRange(jniMessage, 64, jniMessage.length);
 
                 if (javaRc != 0)
