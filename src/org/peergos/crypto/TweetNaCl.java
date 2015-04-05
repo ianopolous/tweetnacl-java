@@ -1297,6 +1297,12 @@ public class TweetNaCl {
                 if (jniRc != 0)
                     throw new IllegalStateException("non-zero jni return code " + jniRc);
 
+                if (!Arrays.equals(javaMessage, message))
+                    throw new IllegalStateException("Java unsign != original!");
+
+                if (!Arrays.equals(jniMessage, message))
+                    throw new IllegalStateException("JNI unsign != original!");
+
                 boolean test = Arrays.equals(jniMessage, javaMessage);
                 for (int i=0; i < javaMessage.length; i++)
                     if (javaMessage[i] != jniMessage[i])
