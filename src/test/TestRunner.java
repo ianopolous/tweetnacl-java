@@ -7,7 +7,7 @@ import org.peergos.crypto.TweetNaCl;
 public class TestRunner {
 
     public static void main(String[] args) {
-        Result result = JUnitCore.runClasses(TweetNaCl.Test.class);
+        Result result = JUnitCore.runClasses(NativeTest.class);
 
         result.getFailures().stream()
                 .forEach(System.out::println);

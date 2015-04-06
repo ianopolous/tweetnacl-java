@@ -5,17 +5,10 @@ import org.peergos.crypto.TweetNaCl;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
-public class Test
+public class JSTest
 {
     private static ScriptEngineManager engineManager = new ScriptEngineManager();
     public static final ScriptEngine engine = engineManager.getEngineByName("nashorn");
@@ -78,7 +71,7 @@ public class Test
                     "    for (var i = 0; i < 64; i++) both[32+i] = sk[i];" +
                     "    return both;" +
                     "}");
-            engine.eval(new InputStreamReader(Test.class.getClassLoader().getResourceAsStream("lib/nacl.js")));
+            engine.eval(new InputStreamReader(JSTest.class.getClassLoader().getResourceAsStream("lib/nacl.js")));
             engine.eval("Object.freeze(this);");
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -168,7 +161,7 @@ public class Test
             prng.nextBytes(message);
 
             // box
-            byte[] nonce = Test.createNonce();
+            byte[] nonce = JSTest.createNonce();
             byte[] cipher = encryptMessageFor(message, nonce, publicBoxingKey, secretBoxingKey);
             byte[] cipher2 = TweetNaCl.crypto_box(message, nonce, publicBoxingKey, secretBoxingKey);
             if (!Arrays.equals(cipher, cipher2)) {
