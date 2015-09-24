@@ -25,7 +25,7 @@ public class JSTest
         try {
             engine.eval("var navigator = {}, window = {}; window.crypto = {};\n window.crypto.getRandomValues = " +
                     "function (arr){\n" +
-                    "    var jarr = Java.type('test.Test').getRandomValues(arr.length);\n" +
+                    "    var jarr = Java.type('test.JSTest').getRandomValues(arr.length);\n" +
                     "    for (var i=0; i < arr.length; i++) arr[i] = jarr[i];\n" +
                     "}\n" +
                     "" +
@@ -136,6 +136,8 @@ public class JSTest
             Object res = invocable.invokeFunction("unsign",
                     invocable.invokeFunction("fromByteArray", signed),
                     invocable.invokeFunction("fromByteArray", publicSigningKey));
+            if (res == null)
+                throw new RuntimeException("Bad signature!");
             return (byte[]) invocable.invokeFunction("toByteArray", res);
         } catch (Exception e) {throw new RuntimeException(e);}
     }
@@ -181,6 +183,21 @@ public class JSTest
             if (n == 1)
                 System.out.println("Passed unbox test.");
 
+            // unbox
+            try {
+                byte[] ciphererr = Arrays.copyOf(cipher, cipher.length);
+                ciphererr[0] = (byte)~ciphererr[0];
+                byte[] clearerr = TweetNaCl.crypto_box_open(ciphererr, nonce, publicBoxingKey, secretBoxingKey);
+                throw new IllegalStateException("JS -> J, Decrypted bad cipher text didn't fail: " + new String(clearerr) + " != " + new String(message));
+            } catch (Exception e) {}
+            try {
+                byte[] cipher2err = Arrays.copyOf(cipher2, cipher2.length);
+                byte[] clear2err = decryptMessage(cipher2err, nonce, publicBoxingKey, secretBoxingKey);
+                throw new IllegalStateException("J -> JS, Decrypted message != original: " + new String(clear2err) + " != " + new String(message));
+            } catch (Exception e) {}
+            if (n == 1)
+                System.out.println("Passed unbox with error test.");
+
             // sign keygen
             byte[] publicSigningKey = new byte[32];
             byte[] secretSigningKey = new byte[64];
@@ -221,7 +238,20 @@ public class JSTest
                 throw new IllegalStateException("JS: Unsigned message != original! ");
             if (n == 1)
                 System.out.println("Passed unsign tests.");
+
+            // unsign with error
+            byte[] sigerr = Arrays.copyOf(sig, sig.length);
+            sigerr[0] = (byte)(~sigerr[0]);
+            try {
+                byte[] unsignederr = TweetNaCl.crypto_sign_open(sigerr, publicSigningKey);
+                throw new IllegalStateException("J: invalid unsign didn't fail! ");
+            } catch (Exception e) {}
+            try {
+                byte[] unsigned2err = unsignMessage(sigerr, publicSigningKey);
+                throw new IllegalStateException("JS: invalid unsign didn't fail! ");
+            } catch (Exception e) {}
+            System.out.println("Passed unsign with error tests.");
         }
-        System.out.println("Passed all tests for "+n +" sets of random key pairs and random mesages "+max+" bytes long!");
+        System.out.println("Passed all tests for "+n +" sets of random key pairs and random messages "+max+" bytes long!");
     }
 }
