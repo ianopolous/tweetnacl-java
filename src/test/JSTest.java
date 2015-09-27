@@ -231,12 +231,26 @@ public class JSTest
                 System.out.println("Passed sign tests.");
 
             // unsign
-            byte[] unsigned = TweetNaCl.crypto_sign_open(sig, publicSigningKey);
-            if (!Arrays.equals(unsigned, message))
-                throw new IllegalStateException("J: Unsigned message != original! ");
-            byte[] unsigned2 = unsignMessage(sig, publicSigningKey);
-            if (!Arrays.equals(unsigned2, message))
-                throw new IllegalStateException("JS: Unsigned message != original! ");
+            {
+                byte[] unsigned = TweetNaCl.crypto_sign_open(sig, publicSigningKey);
+                if (!Arrays.equals(unsigned, message))
+                    throw new IllegalStateException("J (J sig): Unsigned message != original! ");
+            }
+            {
+                byte[] unsigned = TweetNaCl.crypto_sign_open(sig2, publicSigningKey);
+                if (!Arrays.equals(unsigned, message))
+                    throw new IllegalStateException("J (JS sig): Unsigned message != original! ");
+            }
+            {
+                byte[] unsigned2 = unsignMessage(sig, publicSigningKey);
+                if (!Arrays.equals(unsigned2, message))
+                    throw new IllegalStateException("JS (J sig): Unsigned message != original! ");
+            }
+            {
+                byte[] unsigned2 = unsignMessage(sig2, publicSigningKey);
+                if (!Arrays.equals(unsigned2, message))
+                    throw new IllegalStateException("JS (JS sig): Unsigned message != original! ");
+            }
             if (n == 1)
                 System.out.println("Passed unsign tests.");
 
@@ -251,7 +265,8 @@ public class JSTest
                 byte[] unsigned2err = unsignMessage(sigerr, publicSigningKey);
                 throw new IllegalStateException("JS: invalid unsign didn't fail! ");
             } catch (TweetNaCl.InvalidSignatureException e) {}
-            System.out.println("Passed unsign with error tests.");
+            if (n == 1)
+                System.out.println("Passed unsign with error tests.");
         }
         System.out.println("Passed all tests for "+n +" sets of random key pairs and random messages "+max+" bytes long!");
     }
