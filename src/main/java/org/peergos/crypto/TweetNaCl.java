@@ -111,7 +111,7 @@ public class TweetNaCl
 
     /**
      * The crypto_sign function signs a message m[0], ..., m[mlen-1]
-     * using the signer's secret key sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1] and retuns
+     * using the signer's secret key sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1] and returns
      * the signed message
      *
      * @param message          to be signed
@@ -125,6 +125,14 @@ public class TweetNaCl
         return signedMessage;
     }
 
+    /**
+     * Verifies the signed message using the public key of the signer.
+     *
+     * @param signed           the signed message
+     * @param publicSigningKey the public key of the signer
+     * @return the verified message
+     * @throws InvalidSignatureException if the signature is invalid
+     */
     public static byte[] crypto_sign_open(byte[] signed, byte[] publicSigningKey)
     {
         byte[] message = new byte[signed.length];
@@ -277,14 +285,18 @@ public class TweetNaCl
         }
 
         for (i = 0; i < 16; ++i)
+        {
             y[i] = x[i];
+        }
 
         for (i = 0; i < 20; ++i)
         {
             for (j = 0; j < 4; ++j)
             {
                 for (m = 0; m < 4; ++m)
+                {
                     t[m] = x[(5 * j + 4 * m) % 16];
+                }
                 t[1] ^= L32(t[0] + t[3], 7);
                 t[2] ^= L32(t[1] + t[0], 9);
                 t[3] ^= L32(t[2] + t[1], 13);
@@ -806,6 +818,16 @@ public class TweetNaCl
         return 0;
     }
 
+    /**
+     * Elliptic curve Diffie-Hellman key exchange on Curve25519 hashing the result with HSalsa.
+     *
+     * This yields a 32 byte shared key in k.
+     *
+     * @param k shared key will be stored inside . the capacity of k must be at least BOX_SECRET_KEY_BYTES
+     * @param y other party public key
+     * @param x our secret key
+     * @return 0
+     */
     public static int crypto_box_beforenm(byte[] k, byte[] y, byte[] x)
     {
         byte[] s = new byte[32];
@@ -823,11 +845,34 @@ public class TweetNaCl
         return crypto_secretbox_open(m, c, d, n, k);
     }
 
-    private static int crypto_box(byte[] c, byte[] m, long d, byte[] nonce, byte[] theirPublicBoxingKey,
-            byte[] ourSecretBoxingKey)
+    /**
+     * The crypto_box function encrypts and authenticates a message m[0], ..., m[d-1]
+     * using the sender's secret key sk[0], sk[1], ..., sk[crypto_box_SECRETKEYBYTES-1],
+     * the receiver's public key pk[0], pk[1], ..., pk[crypto_box_PUBLICKEYBYTES-1],
+     * and a nonce n[0], n[1], ..., n[crypto_box_NONCEBYTES-1].
+     * The crypto_box function puts the ciphertext into c[0], c[1], ..., c[d-1].
+     *
+     * It then returns 0.
+     *
+     * The caller must ensure, before calling the C NaCl crypto_box function,
+     * that the first SECRETBOX_INTERNAL_OVERHEAD_BYTES bytes of the message m are all 0.
+     * Typical higher-level applications will work with the remaining bytes of the message;
+     * note, however, that d counts all of the bytes, including the bytes required to be 0.
+     *
+     * The caller function must ensure that the first SECRETBOX_INTERNAL_OVERHEAD_BYTES bytes of the ciphertext c are all 0.
+     *
+     * @param c padded ciphertext
+     * @param m padded message
+     * @param d length of message
+     * @param nonce nonce
+     * @param pk receiver public key
+     * @param sk sender secret key
+     * @return 0
+     */
+    private static int crypto_box(byte[] c, byte[] m, long d, byte[] nonce, byte[] pk, byte[] sk)
     {
         byte[] k = new byte[32];
-        crypto_box_beforenm(k, theirPublicBoxingKey, ourSecretBoxingKey);
+        crypto_box_beforenm(k, pk, sk);
         return crypto_box_afternm(c, m, d, nonce, k);
     }
 
@@ -1487,7 +1532,7 @@ public class TweetNaCl
     }
 
     /**
-     * The crypto_sign function signs a message m[0], ..., m[n-1] using the signer's secret key
+     * The crypto_sign function signs a message m[0], ..., m[n-1] using the sender's secret key
      * sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1]  and puts the signed message into sm[0], sm[1], ..., sm[smlen-1].
      * It then returns 0.
      *
@@ -1590,6 +1635,19 @@ public class TweetNaCl
         return 0;
     }
 
+    /**
+     * The crypto_sign_open function verifies the signature in sm[0], ..., sm[n-1] using the
+     * signer's public key pk[0], pk[1], ..., pk[crypto_sign_PUBLICKEYBYTES-1].
+     * Then it puts the message into m[0], m[1], ..., m[mlen-1]
+     *
+     * The caller must allocate at least n bytes for m.
+     *
+     * @param m  output
+     * @param sm signed message
+     * @param n  length of sm
+     * @param pk signer public key
+     * @return 0 if the signature is ok, -1 otherwise
+     */
     private static int crypto_sign_open(byte[] m, byte[] sm, int n, byte[] pk)
     {
         int i;
