@@ -1,8 +1,6 @@
 group 'org.peergos'
 version '0.1'
 
-apply plugin: "java"
-apply plugin: 'com.google.osdetector'
 
 buildscript {
     repositories {
@@ -13,6 +11,9 @@ buildscript {
     }
 
 }
+
+apply plugin: "java"
+apply plugin: 'com.google.osdetector'
 
 
 repositories {
@@ -54,17 +55,13 @@ test {
 
 }
 
-dependencies {
-    testCompile 'org.hamcrest:hamcrest-core:1.3'
-    testCompile 'junit:junit:4.12'
-}
 
 task buildNativeHeaders(type: Exec) {
+
     def classpath = sourceSets.main.output.classesDir
 
     commandLine "javah", "-d", "build/jniheaders", "-classpath", "$classpath", "org.peergos.crypto.JniTweetNacl"
 
-    dependsOn classes
 }
 
 
@@ -72,17 +69,41 @@ task buildNativeHeaders(type: Exec) {
 task compileNativeLib(type: Exec) {
 
     def jniPath;
+    def objPath;
+
     if (osdetector.os.equalsIgnoreCase("linux")) {
         jniPath = "linux"
-    }
-    if (osdetector.os.equalsIgnoreCase("osx")) {
+        objPath = "-obuild/libtweetnacl.so"
+
+    } else if (osdetector.os.equalsIgnoreCase("osx")) {
         jniPath = "darwin"
+        objPath = "-obuild/libtweetnacl.jnilib"
+    } else {
+        throw new RuntimeException("Only Linux & OSX builds are supported currently")
     }
+
 
     commandLine "gcc", "-Wimplicit-function-declaration", "-fPIC", "-std=c11", "-I${System.env.JAVA_HOME}/include",
             "-I${System.env.JAVA_HOME}/include/${jniPath}", "-Isrc/main/jnilibs", "-Isrc/main/jni", "-shared", "-Ibuild/jniheaders",
-            "-o build/libtweetnacl.so", "src/main/jni/org_peergos_crypto_JniTweetNacl.c"
+            objPath, "src/main/jni/org_peergos_crypto_JniTweetNacl.c"
 
-    dependsOn buildNativeHeaders
 
 }
+
+
+classes.dependsOn(compileNativeLib)
+compileNativeLib.dependsOn(buildNativeHeaders)
+
+
+test {
+    systemProperty "java.library.path", "${buildDir}"
+}
+
+
+dependencies {
+    testCompile 'org.hamcrest:hamcrest-core:1.3'
+    testCompile 'junit:junit:4.12'
+
+}
+
+
