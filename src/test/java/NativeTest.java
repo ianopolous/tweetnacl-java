@@ -1,5 +1,3 @@
-package test;
-
 import org.peergos.crypto.*;
 
 import java.util.*;
