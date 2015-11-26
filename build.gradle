@@ -1,0 +1,118 @@
+group 'org.peergos'
+version '0.1'
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
+    }
+
+}
+
+apply plugin: "java"
+apply plugin: 'com.google.osdetector'
+
+
+repositories {
+    mavenCentral()
+
+}
+
+
+compileJava {
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
+
+compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+[compileJava, compileTestJava].each() {
+    it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"]
+    it.options.encoding = "UTF-8"
+}
+
+
+javadoc.options {
+    encoding = 'UTF-8'
+    links 'https://docs.oracle.com/javase/8/docs/api/'
+}
+
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+    maxParallelForks = Runtime.runtime.availableProcessors()
+
+}
+
+
+task buildNativeHeaders(type: Exec) {
+
+    def classpath = sourceSets.main.output.classesDir
+
+
+
+    commandLine "javah", "-d", "build/jniheaders", "-classpath", "$classpath", "org.peergos.crypto.JniTweetNacl"
+
+}
+
+
+
+task compileNativeLib(type: Exec) {
+
+    def jniPath;
+    def objPath;
+
+    if (osdetector.os.equalsIgnoreCase("linux")) {
+        jniPath = "linux"
+        objPath = "-obuild/libtweetnacl.so"
+
+    } else if (osdetector.os.equalsIgnoreCase("osx")) {
+        jniPath = "darwin"
+        objPath = "-obuild/libtweetnacl.jnilib"
+    } else {
+        throw new RuntimeException("Only Linux & OSX builds are supported currently")
+    }
+
+
+    commandLine "gcc", "-Wimplicit-function-declaration", "-fPIC", "-std=c11", "-I${System.env.JAVA_HOME}/include",
+            "-I${System.env.JAVA_HOME}/include/${jniPath}", "-Isrc/test/resources/", "-shared", "-Ibuild/jniheaders",
+            objPath, "src/test/resources/org_peergos_crypto_JniTweetNacl.c"
+
+
+}
+
+testClasses.dependsOn   {
+    buildNativeHeaders
+    compileNativeLib
+}
+
+
+
+
+test {
+    systemProperty "java.library.path", "${buildDir}"
+}
+
+jar {
+    from "license.txt"
+}
+
+
+dependencies {
+
+    testCompile files('lib/hamcrest-core-1.3.jar')
+    testCompile files('lib/junit-4.11.jar')
+
+}
+

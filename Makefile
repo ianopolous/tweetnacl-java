@@ -1,5 +1,4 @@
-CP = `find lib -name "*.jar" -printf %p:`
-JAVA_BUILD_OPTS = -g -source 1.8 -target 1.8 -cp .:$(CP)
+JAVA_BUILD_OPTS = -g -source 1.8 -target 1.8
 CP_SPACE = .
 
 .PHONY: def
@@ -8,30 +7,34 @@ def: clean compile jni test
 .PHONY: clean
 clean:
 	rm -fr build
-	rm -f libtweetnacl.so
-	rm -f Test.jar
 
 .PHONY: compile 
 compile: 
-	mkdir -p build
-	javac $(JAVA_BUILD_OPTS) -d build `find src -name \*.java`
+	mkdir -p build/classes/jar
+
+	javac $(JAVA_BUILD_OPTS) -cp ".:lib/*" -d build/classes/jar `find src/main -name \*.java`
+	javac $(JAVA_BUILD_OPTS) -cp ".:lib/*:build/classes/jar" -d build/classes/jar `find src/test -name \*.java`
+
+
 
 .PHONY: test 
 test: compile
 	echo "Name: TweetNaCl.java Tests" > def.manifest
-	echo "Main-Class: test.JSTest" >> def.manifest
+	echo "Main-Class: org.peergos.crypto.JSTest" >> def.manifest
 	echo "Build-Date: " `date` >> def.manifest
 	echo "Class-Path: " $(CP_SPACE)>> def.manifest
-	jar -cfm Test.jar def.manifest \
-	    -C build org -C build test
+
+
+	jar -cfm build/Test.jar def.manifest -C build/classes/jar org -C src/test/resources nacl.js
+
 	rm -f def.manifest
+
 
 .PHONY: jni
 jni: compile
-	javah -jni -classpath build -d jni org.peergos.crypto.JniTweetNacl
-	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Inative -Ijni -shared -o libtweetnacl.so jni/org_peergos_crypto_JniTweetNacl.c
+	javah -jni -classpath build/classes/jar  org.peergos.crypto.JniTweetNacl
+	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Isrc/test/resources -Ibuild/jniheaders  -shared -obuild/libtweetnacl.so src/test/resources/org_peergos_crypto_JniTweetNacl.c
 
 .PHONY: jni_test
-jni_tests: def 
-	java -Djava.library.path=. -cp "Test.jar:lib/*" test.TestRunner
-
+jni_tests: def
+	java -Xmx250m -Xms250m -Djava.library.path=build -cp "build/Test.jar:lib/*" org.peergos.crypto.TestRunner
