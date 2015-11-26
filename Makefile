@@ -33,7 +33,7 @@ test: compile
 .PHONY: jni
 jni: compile
 	javah -jni -classpath build/classes/jar -d build/jniheaders org.peergos.crypto.JniTweetNacl
-	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin -Isrc/main/jni  -Isrc/main/jnilibs -Ibuild/jniheaders  -shared -obuild/libtweetnacl.jnilib src/main/jni/org_peergos_crypto_JniTweetNacl.c
+	gcc -Wimplicit-function-declaration -fPIC -std=c11 -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -Isrc/main/jni  -Isrc/main/jnilibs -Ibuild/jniheaders  -shared -obuild/libtweetnacl.so src/main/jni/org_peergos_crypto_JniTweetNacl.c
 
 .PHONY: jni_test
 jni_tests: def
