@@ -70,7 +70,7 @@ public class NativeTest {
 
         byte[] message = new byte[messageLength];
 
-        int signedLength = message.length + TweetNaCl.SIGNATURE_SIZE_BYTES;
+        int signedLength = message.length + TweetNaCl.CRYPTO_SIGN_BYTES;
 
         byte[] jniSignedMessage = new byte[signedLength];
 

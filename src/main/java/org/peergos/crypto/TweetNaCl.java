@@ -13,22 +13,19 @@ import java.util.Random;
 public class TweetNaCl
 {
 
-    public static final int crypto_auth_hmacsha512256_tweet_BYTES = 32;
-    public static final int crypto_auth_hmacsha512256_tweet_KEYBYTES = 32;
     public static final int BOX_PUBLIC_KEY_BYTES = 32;
     public static final int BOX_SECRET_KEY_BYTES = 32;
-    public static final int BOX_SHARED_KEY_BYTES = 32;
     public static final int BOX_NONCE_BYTES = 24;
-    public static final int BOX_OVERHEAD_BYTES = 16;
-    public static final int SIGNATURE_SIZE_BYTES = 64;
-    public static final int SIGN_PUBLIC_KEY_BYTES = 32;
-    public static final int SIGN_SECRET_KEY_BYTES = 64;
-    public static final int SIGN_KEYPAIR_SEED_BYTES = 32;
-    public static final int SECRETBOX_KEY_BYTES = 32;
-    public static final int SECRETBOX_NONCE_BYTES = 24;
+
+    public static final int CRYPTO_SIGN_BYTES = 64;
+    public static final int CRYPTO_SIGN_SECRETKEYBYTES = 64;
+    public static final int CRYPTO_SIGN_PUBLICKEYBYTES = 32;
+
     public static final int SECRETBOX_OVERHEAD_BYTES = 16;
-    public static final int HASH_SIZE_BYTES = 64; // SHA-512
     public static final int SECRETBOX_INTERNAL_OVERHEAD_BYTES = 32;
+
+    public static final int CRYPTO_SECRETBOX_ZEROBYTES = 32;
+    public static final int CRYPTO_SECRETBOX_BOXZEROBYTES = 16;
 
     public static class InvalidSignatureException extends RuntimeException
     {
@@ -43,8 +40,8 @@ public class TweetNaCl
      * assumes the key is already placed in sk)
      * and a corresponding public key.  This keys must be  used for signing purposes.
      *
-     * It puts the secret key into sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1]
-     * and puts the public key into pk[0], pk[1], ..., pk[crypto_sign_PUBLICKEYBYTES-1].
+     * It puts the secret key into sk[0], sk[1], ..., sk[{@link #CRYPTO_SIGN_SECRETKEYBYTES}-1]
+     * and puts the public key into pk[0], pk[1], ..., pk[{@link #CRYPTO_SIGN_PUBLICKEYBYTES} -1].
      *
      * @param pk
      * @param sk
@@ -111,7 +108,7 @@ public class TweetNaCl
 
     /**
      * The crypto_sign function signs a message m[0], ..., m[mlen-1]
-     * using the signer's secret key sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1] and returns
+     * using the signer's secret key sk[0], sk[1], ..., sk[{@link #CRYPTO_SIGN_SECRETKEYBYTES}-1] and returns
      * the signed message
      *
      * @param message          to be signed
@@ -120,7 +117,7 @@ public class TweetNaCl
      */
     public static byte[] crypto_sign(byte[] message, byte[] secretSigningKey)
     {
-        byte[] signedMessage = new byte[message.length + TweetNaCl.SIGNATURE_SIZE_BYTES];
+        byte[] signedMessage = new byte[message.length + TweetNaCl.CRYPTO_SIGN_BYTES];
         TweetNaCl.crypto_sign(signedMessage, message, message.length, secretSigningKey);
         return signedMessage;
     }
@@ -180,6 +177,15 @@ public class TweetNaCl
         return Arrays.copyOfRange(c, SECRETBOX_OVERHEAD_BYTES, c.length);
     }
 
+    /**
+     * Verifies and decrypts the ciphertext
+     *
+     * @param cipher ciphertext
+     * @param nonce  nonce
+     * @param key    secret key
+     * @return the decrypted and verified plaintext
+     * @throws IllegalStateException if cipher is too small or the encryption is invalid
+     */
     public static byte[] secretbox_open(byte[] cipher, byte[] nonce, byte[] key)
     {
         byte[] c = new byte[SECRETBOX_OVERHEAD_BYTES + cipher.length];
@@ -528,7 +534,27 @@ public class TweetNaCl
         return crypto_verify_16(h, hOff, x);
     }
 
-    private static int crypto_secretbox(byte[] c, byte[] m, long d, byte[] n, byte[] k)
+    /**
+     * The crypto_secretbox function encrypts and authenticates a message m[0], m[1], ..., m[d-1] using a
+     * secret key k[0], ..., k[crypto_secretbox_KEYBYTES-1] and a nonce n[0], n[1], ..., n[crypto_secretbox_NONCEBYTES-1].
+     * The crypto_secretbox function puts the ciphertext into c[0], c[1], ..., c[d-1]. It then returns 0.
+     *
+     *
+     * The caller must ensure, before calling the C NaCl crypto_secretbox function,
+     * that the first {@link #CRYPTO_SECRETBOX_ZEROBYTES }  bytes of the message m are all 0.
+     * Typical higher-level applications will work with the remaining bytes of the message;
+     * note, however, that d counts all of the bytes, including the bytes required to be 0.
+     *
+     * The crypto_secretbox caller must ensure that the first {@link #CRYPTO_SECRETBOX_BOXZEROBYTES }  bytes of the ciphertext c are all 0.
+     *
+     * @param c
+     * @param m
+     * @param d
+     * @param n
+     * @param k
+     * @return
+     */
+    public static int crypto_secretbox(byte[] c, byte[] m, long d, byte[] n, byte[] k)
     {
         int i;
         if (d < 32)
@@ -544,7 +570,28 @@ public class TweetNaCl
         return 0;
     }
 
-    private static int crypto_secretbox_open(byte[] m, byte[] c, long d, byte[] n, byte[] k)
+    /**
+     * The crypto_secretbox_open function verifies and decrypts a ciphertext c[0], c[1], ..., c[d-1]
+     * using a secret key k[0], k[1], ..., k[crypto_secretbox_KEYBYTES-1] and a nonce n[0], ..., n[crypto_secretbox_NONCEBYTES-1].
+     * The crypto_secretbox_open function puts the plaintext into m[0], m[1], ..., m[d-1]. It then returns 0.
+     *
+     * If the ciphertext fails verification, crypto_secretbox_open instead returns -1, possibly after modifying m[0], m[1], etc.
+     *
+     *
+     * The crypto_secretbox_open function ensures (in case of success)
+     * that the first {@link #CRYPTO_SECRETBOX_ZEROBYTES }  bytes of the plaintext m are all 0.
+     *
+     * The caller must ensure, before calling the crypto_secretbox_open function,
+     * that the first {@link #CRYPTO_SECRETBOX_BOXZEROBYTES }  bytes of the ciphertext c are all 0.
+     *
+     * @param m plaintext container
+     * @param c ciphertext
+     * @param d length of ciphertext
+     * @param n nonce
+     * @param k secret key
+     * @return 0 if successful , -1 otherwise
+     */
+    public static int crypto_secretbox_open(byte[] m, byte[] c, long d, byte[] n, byte[] k)
     {
         int i;
         byte[] x = new byte[32];
@@ -1536,8 +1583,8 @@ public class TweetNaCl
      * sk[0], sk[1], ..., sk[crypto_sign_SECRETKEYBYTES-1]  and puts the signed message into sm[0], sm[1], ..., sm[smlen-1].
      * It then returns 0.
      *
-     * The maximum possible length smlen is n+crypto_sign_BYTES.
-     * The caller must allocate at least n+crypto_sign_BYTES bytes for sm.
+     * The maximum possible length smlen is n + {@link #CRYPTO_SIGN_BYTES}
+     * The caller must allocate at least n + {@link #CRYPTO_SIGN_BYTES} bytes for sm.
      *
      * @param sm
      * @param m
@@ -1637,7 +1684,7 @@ public class TweetNaCl
 
     /**
      * The crypto_sign_open function verifies the signature in sm[0], ..., sm[n-1] using the
-     * signer's public key pk[0], pk[1], ..., pk[crypto_sign_PUBLICKEYBYTES-1].
+     * signer's public key pk[0], pk[1], ..., pk[{@link #CRYPTO_SIGN_PUBLICKEYBYTES}-1].
      * Then it puts the message into m[0], m[1], ..., m[mlen-1]
      *
      * The caller must allocate at least n bytes for m.
