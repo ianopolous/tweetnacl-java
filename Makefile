@@ -25,7 +25,7 @@ test: compile
 	echo "Class-Path: " $(CP_SPACE)>> def.manifest
 
 
-	jar -cfm build/Test.jar def.manifest -C build/classes/jar org
+	jar -cfm build/Test.jar def.manifest -C build/classes/jar org -C src/main/resources nacl.js
 
 	rm -f def.manifest
 
@@ -37,4 +37,4 @@ jni: compile
 
 .PHONY: jni_test
 jni_tests: def
-	java -Djava.library.path=build -cp "build/Test.jar:lib/*" org.peergos.crypto.TestRunner
+	java -Xmx250m -Xms250m -Djava.library.path=build -cp "build/Test.jar:lib/*" org.peergos.crypto.TestRunner

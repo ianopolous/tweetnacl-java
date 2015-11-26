@@ -1,27 +1,40 @@
 package org.peergos.crypto;
 
-import javax.script.*;
+import org.junit.Test;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 
 public class JSTest
 {
     private static ScriptEngineManager engineManager = new ScriptEngineManager();
-    public static final ScriptEngine engine = engineManager.getEngineByName("nashorn");
-    public static final Invocable invocable = (Invocable) engine;
+    private static final ScriptEngine engine = engineManager.getEngineByName("nashorn");
+    private static final Invocable invocable = (Invocable) engine;
 
-    public static Random prng = new Random(0); // only used in testing so let's make it deterministic
-    public static byte[] getRandomValues(int len) {
+    private static Random prng = new Random(0); // only used in testing so let's make it deterministic
+
+    public static byte[] getRandomValues(int len)
+    {
         byte[] in = new byte[len];
         prng.nextBytes(in);
         return in;
     }
 
-    static {
-        try {
+    static
+    {
+        try
+        {
             engine.eval("var navigator = {}, window = {}; window.crypto = {};\n window.crypto.getRandomValues = " +
                     "function (arr){\n" +
-                    "    var jarr = Java.type('test.org.peergos.crypto.JSTest').getRandomValues(arr.length);\n" +
+                    "    var jarr = Java.type('org.peergos.crypto.JSTest').getRandomValues(arr.length);\n" +
                     "    for (var i=0; i < arr.length; i++) arr[i] = jarr[i];\n" +
                     "}\n" +
                     "" +
@@ -49,8 +62,8 @@ public class JSTest
                     "    return window.nacl.box.open(cipher, nonce, pubBox, secretBox);" +
                     "}" +
                     "" +
-                    "function unsign(signature, publicSigningKey) {" +
-                    "    return window.nacl.sign.open(signature, publicSigningKey);" +
+                    "function unsign(signature, privateSigningKey) {" +
+                    "    return window.nacl.sign.open(signature, privateSigningKey);" +
                     "}" +
                     "" +
                     "function sign(message, secretSigningKey) {" +
@@ -67,60 +80,83 @@ public class JSTest
                     "    for (var i = 0; i < 64; i++) both[32+i] = sk[i];" +
                     "    return both;" +
                     "}");
-            engine.eval(new InputStreamReader(JSTest.class.getClassLoader().getResourceAsStream("lib/nacl.js")));
+            engine.eval(new InputStreamReader(JSTest.class.getClassLoader().getResourceAsStream("nacl.js")));
             engine.eval("Object.freeze(this);");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new IllegalStateException(e);
         }
     }
 
-    public static byte[] signMessage(byte[] message, byte[] secretSigningKey)
+    private static byte[] signMessage(byte[] message, byte[] secretSigningKey)
     {
         byte[] res = null;
-        try {
-            res = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("sign",
-                    invocable.invokeFunction("fromByteArray", message),
-                    invocable.invokeFunction("fromByteArray", secretSigningKey)));
-        } catch (Exception e) {e.printStackTrace();}
+        try
+        {
+            res = (byte[]) invocable.invokeFunction("toByteArray", invocable
+                    .invokeFunction("sign", invocable.invokeFunction("fromByteArray", message),
+                            invocable.invokeFunction("fromByteArray", secretSigningKey)));
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         return res;
     }
 
-    public static byte[] decryptMessage(byte[] cipher, byte[] nonce, byte[] theirPublicBoxingKey, byte[] secretBoxingKey)
+    private static byte[] decryptMessage(byte[] cipher, byte[] nonce, byte[] theirprivateBoxingKey, byte[] secretBoxingKey)
     {
         byte[] res = null;
-        try {
-            res = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("unbox",
-                    invocable.invokeFunction("fromByteArray", cipher),
-                    invocable.invokeFunction("fromByteArray", nonce),
-                    invocable.invokeFunction("fromByteArray", theirPublicBoxingKey),
-                    invocable.invokeFunction("fromByteArray", secretBoxingKey)));
-        } catch (Exception e) {e.printStackTrace();}
+        try
+        {
+            res = (byte[]) invocable.invokeFunction("toByteArray", invocable
+                    .invokeFunction("unbox", invocable.invokeFunction("fromByteArray", cipher),
+                            invocable.invokeFunction("fromByteArray", nonce),
+                            invocable.invokeFunction("fromByteArray", theirprivateBoxingKey),
+                            invocable.invokeFunction("fromByteArray", secretBoxingKey)));
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         if (res.length == 0)
             throw new TweetNaCl.InvalidCipherTextException();
         return res;
     }
 
-    public static byte[] encryptMessageFor(byte[] input, byte[] nonce, byte[] publicBoxingKey, byte[] ourSecretBoxingKey)
+    private static byte[] encryptMessageFor(byte[] input, byte[] nonce, byte[] privateBoxingKey, byte[] ourSecretBoxingKey)
     {
         byte[] paddedMessage = new byte[32 + input.length];
         System.arraycopy(input, 0, paddedMessage, 32, input.length);
-        try {
-            return (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("box",
-                    invocable.invokeFunction("fromByteArray", input),
-                    invocable.invokeFunction("fromByteArray", nonce),
-                    invocable.invokeFunction("fromByteArray", publicBoxingKey),
-                    invocable.invokeFunction("fromByteArray", ourSecretBoxingKey)));
-        } catch (Exception e) {throw new RuntimeException(e);}
+        try
+        {
+            return (byte[]) invocable.invokeFunction("toByteArray", invocable
+                    .invokeFunction("box", invocable.invokeFunction("fromByteArray", input),
+                            invocable.invokeFunction("fromByteArray", nonce),
+                            invocable.invokeFunction("fromByteArray", privateBoxingKey),
+                            invocable.invokeFunction("fromByteArray", ourSecretBoxingKey)));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static byte[] createNonce() {
-        try {
+    private static byte[] createNonce()
+    {
+        try
+        {
             Object nonce = invocable.invokeFunction("createNonce");
             return (byte[]) invocable.invokeFunction("toByteArray", nonce);
-        } catch (Exception e) {throw new RuntimeException(e);}
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static String bytesToHex(byte[] data)
+    private static String bytesToHex(byte[] data)
     {
         StringBuilder s = new StringBuilder();
         for (byte b : data)
@@ -128,144 +164,157 @@ public class JSTest
         return s.toString();
     }
 
-    public static byte[] unsignMessage(byte[] signed, byte[] publicSigningKey)
+    private static byte[] unsignMessage(byte[] signed, byte[] privateSigningKey)
     {
-        try {
-            Object res = invocable.invokeFunction("unsign",
-                    invocable.invokeFunction("fromByteArray", signed),
-                    invocable.invokeFunction("fromByteArray", publicSigningKey));
+        try
+        {
+            Object res = invocable.invokeFunction("unsign", invocable.invokeFunction("fromByteArray", signed),
+                    invocable.invokeFunction("fromByteArray", privateSigningKey));
             if (res == null)
                 throw new TweetNaCl.InvalidSignatureException();
             return (byte[]) invocable.invokeFunction("toByteArray", res);
-        } catch (ScriptException | NoSuchMethodException e) {throw new RuntimeException(e);}
+        }
+        catch (ScriptException | NoSuchMethodException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
-            System.out.println("Run with:");
-            System.out.println("         java -jar Test.jar $k $n [-random]");
-            System.out.println("Where $k is the size in KiB of the message, and $n is the number of random keypairs to try. -random randomises the PRNG");
-            return;
-        }
-        if (args.length > 2 && args[2].equals("-random"))
-            prng.setSeed(System.currentTimeMillis());
-        int n = Integer.parseInt(args[1]);
-        int max = Integer.parseInt(args[0])*1024;
-        for (int i=0; i < n; i++) {
-            byte[] publicBoxingKey = new byte[32];
+    private static final int MESSAGE_SIZE = 128;
+    private static final int NUMBER_OF_RANDOM_KEYPAIRS = 10;
+
+    @Test
+    public  void testAll() throws Exception
+    {
+
+        prng.setSeed(System.currentTimeMillis());
+
+        for (int i = 0; i < NUMBER_OF_RANDOM_KEYPAIRS; i++)
+        {
+            byte[] privateBoxingKey = new byte[32];
             byte[] secretBoxingKey = new byte[32];
             prng.nextBytes(secretBoxingKey);
-            TweetNaCl.crypto_box_keypair(publicBoxingKey, secretBoxingKey, true);
+            TweetNaCl.crypto_box_keypair(privateBoxingKey, secretBoxingKey, true);
 
-            byte[] message = new byte[max];
+            byte[] message = new byte[MESSAGE_SIZE];
             prng.nextBytes(message);
 
             // box
             byte[] nonce = JSTest.createNonce();
-            byte[] cipher = encryptMessageFor(message, nonce, publicBoxingKey, secretBoxingKey);
-            byte[] cipher2 = TweetNaCl.crypto_box(message, nonce, publicBoxingKey, secretBoxingKey);
-            if (!Arrays.equals(cipher, cipher2)) {
-                throw new IllegalStateException("Different ciphertexts with same nonce!: " + bytesToHex(cipher) + " != " + bytesToHex(cipher2));
-            }
-            if (n == 1)
-                System.out.println("Passed box test.");
+            byte[] cipher = encryptMessageFor(message, nonce, privateBoxingKey, secretBoxingKey);
+            byte[] cipher2 = TweetNaCl.crypto_box(message, nonce, privateBoxingKey, secretBoxingKey);
+
+            assertArrayEquals("Different ciphertexts with same nonce!: " + bytesToHex(cipher) + " != " + bytesToHex(cipher2),
+                    cipher, cipher2);
 
             // unbox
-            byte[] clear = TweetNaCl.crypto_box_open(cipher, nonce, publicBoxingKey, secretBoxingKey);
-            if (!Arrays.equals(clear, message)) {
-                throw new IllegalStateException("JS -> J, Decrypted message != original: " + new String(clear) + " != " + new String(message));
-            }
-            byte[] clear2 = decryptMessage(cipher2, nonce, publicBoxingKey, secretBoxingKey);
-            if (!Arrays.equals(clear2, message))
-                throw new IllegalStateException("J -> JS, Decrypted message != original: " + new String(clear2) + " != " + new String(message));
-            if (n == 1)
-                System.out.println("Passed unbox test.");
+            byte[] clear = TweetNaCl.crypto_box_open(cipher, nonce, privateBoxingKey, secretBoxingKey);
+
+            assertArrayEquals("JS -> J, Decrypted message != original: " + new String(clear) + " != " + new String(message),
+                    clear, message);
+
+            byte[] clear2 = decryptMessage(cipher2, nonce, privateBoxingKey, secretBoxingKey);
+
+            assertArrayEquals("J -> JS, Decrypted message != original: " + new String(clear2) + " != " + new String(message),
+                    clear2, message);
 
             // unbox with error
-            try {
+            try
+            {
                 byte[] ciphererr = Arrays.copyOf(cipher, cipher.length);
-                ciphererr[0] = (byte)~ciphererr[0];
-                byte[] clearerr = TweetNaCl.crypto_box_open(ciphererr, nonce, publicBoxingKey, secretBoxingKey);
-                throw new IllegalStateException("J, Decrypting bad cipher text didn't fail!");
-            } catch (TweetNaCl.InvalidCipherTextException e) {}
-            try {
+                ciphererr[0] = (byte) ~ciphererr[0];
+                TweetNaCl.crypto_box_open(ciphererr, nonce, privateBoxingKey, secretBoxingKey);
+                fail("J, Decrypting bad cipher text didn't fail!");
+
+            }
+            catch (TweetNaCl.InvalidCipherTextException ignored)
+            {
+
+            }
+
+            try
+            {
                 byte[] cipher2err = Arrays.copyOf(cipher2, cipher2.length);
-                cipher2err[0] = (byte)~cipher2err[0];
-                byte[] clear2err = decryptMessage(cipher2err, nonce, publicBoxingKey, secretBoxingKey);
-                throw new IllegalStateException("JS, Decrypting bad cipher text didn't fail!");
-            } catch (TweetNaCl.InvalidCipherTextException e) {}
-            if (n == 1)
-                System.out.println("Passed unbox with error test.");
+                cipher2err[0] = (byte) ~cipher2err[0];
+                decryptMessage(cipher2err, nonce, privateBoxingKey, secretBoxingKey);
+                fail("JS, Decrypting bad cipher text didn't fail!");
+
+            }
+            catch (TweetNaCl.InvalidCipherTextException ignored)
+            {
+            }
 
             // sign keygen
-            byte[] publicSigningKey = new byte[32];
+            byte[] privateSigningKey = new byte[32];
             byte[] secretSigningKey = new byte[64];
             byte[] signSeed = new byte[32];
             prng.nextBytes(signSeed);
             System.arraycopy(signSeed, 0, secretSigningKey, 0, 32);
-            TweetNaCl.crypto_sign_keypair(publicSigningKey, secretSigningKey, true);
-            byte[] jsSignPair = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("sign_keypair",
-                    invocable.invokeFunction("fromByteArray", signSeed)));
+            TweetNaCl.crypto_sign_keypair(privateSigningKey, secretSigningKey, true);
+            byte[] jsSignPair = (byte[]) invocable.invokeFunction("toByteArray",
+                    invocable.invokeFunction("sign_keypair", invocable.invokeFunction("fromByteArray", signSeed)));
             byte[] jsSecretSignKey = Arrays.copyOfRange(jsSignPair, 32, 96);
-            byte[] jsPublicSignKey = Arrays.copyOfRange(jsSignPair, 0, 32);
-            if (!Arrays.equals(secretSigningKey, jsSecretSignKey))
-                throw new IllegalStateException("Signing key generation invalid, different secret keys!");
-            if (!Arrays.equals(publicSigningKey, jsPublicSignKey))
-                throw new IllegalStateException("Signing key generation invalid, different public keys!");
-            if (!Arrays.equals(publicSigningKey, Arrays.copyOfRange(secretSigningKey, 32, 64)))
-                throw new IllegalStateException("Signing public key != second half of secret key!");
-            if (n == 1)
-                System.out.println("Passed sign keygen tests.");
+            byte[] jsprivateSignKey = Arrays.copyOfRange(jsSignPair, 0, 32);
+
+            assertArrayEquals("Signing key generation invalid, different secret keys!", secretSigningKey, jsSecretSignKey);
+
+            assertArrayEquals("Signing key generation invalid, different private keys!", privateSigningKey, jsprivateSignKey);
+
+            assertArrayEquals("Signing private key != second half of secret key!", privateSigningKey,
+                    Arrays.copyOfRange(secretSigningKey, 32, 64));
 
             // sign
             byte[] sig = TweetNaCl.crypto_sign(message, secretSigningKey);
             byte[] sig2 = signMessage(message, secretSigningKey);
-            if (!Arrays.equals(sig, sig2)) {
-                System.out.println("J : " + bytesToHex(sig));
-                System.out.println("JS: " + bytesToHex(sig2));
-                throw new IllegalStateException("Signatures not equal! " + bytesToHex(sig) + " != " + bytesToHex(sig2));
-            }
-            if (n == 1)
-                System.out.println("Passed sign tests.");
+
+            assertArrayEquals("Signatures not equal! " + bytesToHex(sig) + " != " + bytesToHex(sig2), sig, sig2);
 
             // unsign
             {
-                byte[] unsigned = TweetNaCl.crypto_sign_open(sig, publicSigningKey);
-                if (!Arrays.equals(unsigned, message))
-                    throw new IllegalStateException("J (J sig): Unsigned message != original! ");
+                byte[] unsigned = TweetNaCl.crypto_sign_open(sig, privateSigningKey);
+                assertArrayEquals("J (J sig): Unsigned message != original! " + bytesToHex(sig) + " != " + bytesToHex(sig2),
+                        unsigned, message);
+            }
+
+            {
+                byte[] unsigned = TweetNaCl.crypto_sign_open(sig2, privateSigningKey);
+                assertArrayEquals("J (JS sig): Unsigned message != original! " + bytesToHex(sig) + " != " + bytesToHex(sig2),
+                        unsigned, message);
+
             }
             {
-                byte[] unsigned = TweetNaCl.crypto_sign_open(sig2, publicSigningKey);
-                if (!Arrays.equals(unsigned, message))
-                    throw new IllegalStateException("J (JS sig): Unsigned message != original! ");
+                byte[] unsigned2 = unsignMessage(sig, privateSigningKey);
+                assertArrayEquals("J (JS sig): Unsigned message != original! " + bytesToHex(sig) + " != " + bytesToHex(sig2),
+                        unsigned2, message);
             }
             {
-                byte[] unsigned2 = unsignMessage(sig, publicSigningKey);
-                if (!Arrays.equals(unsigned2, message))
-                    throw new IllegalStateException("JS (J sig): Unsigned message != original! ");
+                byte[] unsigned2 = unsignMessage(sig2, privateSigningKey);
+                assertArrayEquals("J (JS sig): Unsigned message != original! " + bytesToHex(sig) + " != " + bytesToHex(sig2),
+                        unsigned2, message);
             }
-            {
-                byte[] unsigned2 = unsignMessage(sig2, publicSigningKey);
-                if (!Arrays.equals(unsigned2, message))
-                    throw new IllegalStateException("JS (JS sig): Unsigned message != original! ");
-            }
-            if (n == 1)
-                System.out.println("Passed unsign tests.");
 
             // unsign with error
             byte[] sigerr = Arrays.copyOf(sig, sig.length);
-            sigerr[0] = (byte)(~sigerr[0]);
-            try {
-                byte[] unsignederr = TweetNaCl.crypto_sign_open(sigerr, publicSigningKey);
-                throw new IllegalStateException("J: invalid unsign didn't fail! ");
-            } catch (TweetNaCl.InvalidSignatureException e) {}
-            try {
-                byte[] unsigned2err = unsignMessage(sigerr, publicSigningKey);
-                throw new IllegalStateException("JS: invalid unsign didn't fail! ");
-            } catch (TweetNaCl.InvalidSignatureException e) {}
-            if (n == 1)
-                System.out.println("Passed unsign with error tests.");
+            sigerr[0] = (byte) (~sigerr[0]);
+            try
+            {
+                byte[] unsignederr = TweetNaCl.crypto_sign_open(sigerr, privateSigningKey);
+                fail("J: invalid unsign didn't fail!");
+
+            }
+            catch (TweetNaCl.InvalidSignatureException ignored)
+            {
+            }
+            try
+            {
+                byte[] unsigned2err = unsignMessage(sigerr, privateSigningKey);
+                fail("J: invalid unsign didn't fail!");
+
+            }
+            catch (TweetNaCl.InvalidSignatureException ignored)
+            {
+            }
+
         }
-        System.out.println("Passed all tests for "+n +" sets of random key pairs and random messages "+max+" bytes long!");
     }
 }

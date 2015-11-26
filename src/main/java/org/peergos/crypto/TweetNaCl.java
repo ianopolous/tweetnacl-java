@@ -861,12 +861,12 @@ public class TweetNaCl
      *
      * The caller function must ensure that the first SECRETBOX_INTERNAL_OVERHEAD_BYTES bytes of the ciphertext c are all 0.
      *
-     * @param c padded ciphertext
-     * @param m padded message
-     * @param d length of message
+     * @param c     padded ciphertext
+     * @param m     padded message
+     * @param d     length of message
      * @param nonce nonce
-     * @param pk receiver public key
-     * @param sk sender secret key
+     * @param pk    receiver public key
+     * @param sk    sender secret key
      * @return 0
      */
     private static int crypto_box(byte[] c, byte[] m, long d, byte[] nonce, byte[] pk, byte[] sk)
