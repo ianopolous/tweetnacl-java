@@ -101,9 +101,9 @@ test {
 
 
 dependencies {
-    testCompile 'org.hamcrest:hamcrest-core:1.3'
-    testCompile 'junit:junit:4.12'
+
+    testCompile files('lib/hamcrest-core-1.3.jar')
+    testCompile files('lib/junit-4.11.jar')
 
 }
-
 

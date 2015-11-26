@@ -1,6 +1,7 @@
+package org.peergos.crypto;
+
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
-import org.peergos.crypto.TweetNaCl;
 
 public class TestRunner {
 

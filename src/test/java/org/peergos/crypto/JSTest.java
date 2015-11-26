@@ -1,4 +1,4 @@
-import org.peergos.crypto.TweetNaCl;
+package org.peergos.crypto;
 
 import javax.script.*;
 import java.io.InputStreamReader;
@@ -21,7 +21,7 @@ public class JSTest
         try {
             engine.eval("var navigator = {}, window = {}; window.crypto = {};\n window.crypto.getRandomValues = " +
                     "function (arr){\n" +
-                    "    var jarr = Java.type('test.JSTest').getRandomValues(arr.length);\n" +
+                    "    var jarr = Java.type('test.org.peergos.crypto.JSTest').getRandomValues(arr.length);\n" +
                     "    for (var i=0; i < arr.length; i++) arr[i] = jarr[i];\n" +
                     "}\n" +
                     "" +
