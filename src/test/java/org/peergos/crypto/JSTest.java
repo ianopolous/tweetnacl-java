@@ -16,22 +16,18 @@ import static org.junit.Assert.fail;
 public class JSTest
 {
     private static ScriptEngineManager engineManager = new ScriptEngineManager();
-    private static final ScriptEngine engine = engineManager.getEngineByName("nashorn");
-    private static final Invocable invocable = (Invocable) engine;
+    public static final ScriptEngine engine = engineManager.getEngineByName("nashorn");
+    public static final Invocable invocable = (Invocable) engine;
 
-    private static Random prng = new Random(0); // only used in testing so let's make it deterministic
-
-    public static byte[] getRandomValues(int len)
-    {
+    public static Random prng = new Random(0); // only used in testing so let's make it deterministic
+    public static byte[] getRandomValues(int len) {
         byte[] in = new byte[len];
         prng.nextBytes(in);
         return in;
     }
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             engine.eval("var navigator = {}, window = {}; window.crypto = {};\n window.crypto.getRandomValues = " +
                     "function (arr){\n" +
                     "    var jarr = Java.type('org.peergos.crypto.JSTest').getRandomValues(arr.length);\n" +
@@ -62,8 +58,8 @@ public class JSTest
                     "    return window.nacl.box.open(cipher, nonce, pubBox, secretBox);" +
                     "}" +
                     "" +
-                    "function unsign(signature, privateSigningKey) {" +
-                    "    return window.nacl.sign.open(signature, privateSigningKey);" +
+                    "function unsign(signature, publicSigningKey) {" +
+                    "    return window.nacl.sign.open(signature, publicSigningKey);" +
                     "}" +
                     "" +
                     "function sign(message, secretSigningKey) {" +
@@ -82,81 +78,58 @@ public class JSTest
                     "}");
             engine.eval(new InputStreamReader(JSTest.class.getClassLoader().getResourceAsStream("nacl.js")));
             engine.eval("Object.freeze(this);");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private static byte[] signMessage(byte[] message, byte[] secretSigningKey)
+    public static byte[] signMessage(byte[] message, byte[] secretSigningKey)
     {
         byte[] res = null;
-        try
-        {
-            res = (byte[]) invocable.invokeFunction("toByteArray", invocable
-                    .invokeFunction("sign", invocable.invokeFunction("fromByteArray", message),
-                            invocable.invokeFunction("fromByteArray", secretSigningKey)));
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        try {
+            res = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("sign",
+                    invocable.invokeFunction("fromByteArray", message),
+                    invocable.invokeFunction("fromByteArray", secretSigningKey)));
+        } catch (Exception e) {e.printStackTrace();}
         return res;
     }
 
-    private static byte[] decryptMessage(byte[] cipher, byte[] nonce, byte[] theirprivateBoxingKey, byte[] secretBoxingKey)
+    public static byte[] decryptMessage(byte[] cipher, byte[] nonce, byte[] theirPublicBoxingKey, byte[] secretBoxingKey)
     {
         byte[] res = null;
-        try
-        {
-            res = (byte[]) invocable.invokeFunction("toByteArray", invocable
-                    .invokeFunction("unbox", invocable.invokeFunction("fromByteArray", cipher),
-                            invocable.invokeFunction("fromByteArray", nonce),
-                            invocable.invokeFunction("fromByteArray", theirprivateBoxingKey),
-                            invocable.invokeFunction("fromByteArray", secretBoxingKey)));
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        try {
+            res = (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("unbox",
+                    invocable.invokeFunction("fromByteArray", cipher),
+                    invocable.invokeFunction("fromByteArray", nonce),
+                    invocable.invokeFunction("fromByteArray", theirPublicBoxingKey),
+                    invocable.invokeFunction("fromByteArray", secretBoxingKey)));
+        } catch (Exception e) {e.printStackTrace();}
         if (res.length == 0)
             throw new TweetNaCl.InvalidCipherTextException();
         return res;
     }
 
-    private static byte[] encryptMessageFor(byte[] input, byte[] nonce, byte[] privateBoxingKey, byte[] ourSecretBoxingKey)
+    public static byte[] encryptMessageFor(byte[] input, byte[] nonce, byte[] publicBoxingKey, byte[] ourSecretBoxingKey)
     {
         byte[] paddedMessage = new byte[32 + input.length];
         System.arraycopy(input, 0, paddedMessage, 32, input.length);
-        try
-        {
-            return (byte[]) invocable.invokeFunction("toByteArray", invocable
-                    .invokeFunction("box", invocable.invokeFunction("fromByteArray", input),
-                            invocable.invokeFunction("fromByteArray", nonce),
-                            invocable.invokeFunction("fromByteArray", privateBoxingKey),
-                            invocable.invokeFunction("fromByteArray", ourSecretBoxingKey)));
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        try {
+            return (byte[]) invocable.invokeFunction("toByteArray", invocable.invokeFunction("box",
+                    invocable.invokeFunction("fromByteArray", input),
+                    invocable.invokeFunction("fromByteArray", nonce),
+                    invocable.invokeFunction("fromByteArray", publicBoxingKey),
+                    invocable.invokeFunction("fromByteArray", ourSecretBoxingKey)));
+        } catch (Exception e) {throw new RuntimeException(e);}
     }
 
-    private static byte[] createNonce()
-    {
-        try
-        {
+    public static byte[] createNonce() {
+        try {
             Object nonce = invocable.invokeFunction("createNonce");
             return (byte[]) invocable.invokeFunction("toByteArray", nonce);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        } catch (Exception e) {throw new RuntimeException(e);}
     }
 
-    private static String bytesToHex(byte[] data)
+    public static String bytesToHex(byte[] data)
     {
         StringBuilder s = new StringBuilder();
         for (byte b : data)
@@ -164,25 +137,20 @@ public class JSTest
         return s.toString();
     }
 
-    private static byte[] unsignMessage(byte[] signed, byte[] privateSigningKey)
+    public static byte[] unsignMessage(byte[] signed, byte[] publicSigningKey)
     {
-        try
-        {
-            Object res = invocable.invokeFunction("unsign", invocable.invokeFunction("fromByteArray", signed),
-                    invocable.invokeFunction("fromByteArray", privateSigningKey));
+        try {
+            Object res = invocable.invokeFunction("unsign",
+                    invocable.invokeFunction("fromByteArray", signed),
+                    invocable.invokeFunction("fromByteArray", publicSigningKey));
             if (res == null)
                 throw new TweetNaCl.InvalidSignatureException();
             return (byte[]) invocable.invokeFunction("toByteArray", res);
-        }
-        catch (ScriptException | NoSuchMethodException e)
-        {
-            throw new RuntimeException(e);
-        }
+        } catch (ScriptException | NoSuchMethodException e) {throw new RuntimeException(e);}
     }
 
-    private static final int MESSAGE_SIZE = 128;
-    private static final int NUMBER_OF_RANDOM_KEYPAIRS = 10;
-
+    public static final int NUMBER_OF_RANDOM_KEYPAIRS = 10;
+    public static final int MESSAGE_SIZE = 128;
     @Test
     public  void testAll() throws Exception
     {
