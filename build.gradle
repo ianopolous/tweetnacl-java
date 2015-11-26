@@ -60,6 +60,8 @@ task buildNativeHeaders(type: Exec) {
 
     def classpath = sourceSets.main.output.classesDir
 
+
+
     commandLine "javah", "-d", "build/jniheaders", "-classpath", "$classpath", "org.peergos.crypto.JniTweetNacl"
 
 }
@@ -84,19 +86,26 @@ task compileNativeLib(type: Exec) {
 
 
     commandLine "gcc", "-Wimplicit-function-declaration", "-fPIC", "-std=c11", "-I${System.env.JAVA_HOME}/include",
-            "-I${System.env.JAVA_HOME}/include/${jniPath}", "-Isrc/main/jnilibs", "-Isrc/main/jni", "-shared", "-Ibuild/jniheaders",
-            objPath, "src/main/jni/org_peergos_crypto_JniTweetNacl.c"
+            "-I${System.env.JAVA_HOME}/include/${jniPath}", "-Isrc/test/resources/", "-shared", "-Ibuild/jniheaders",
+            objPath, "src/test/resources/org_peergos_crypto_JniTweetNacl.c"
 
 
 }
 
+testClasses.dependsOn   {
+    buildNativeHeaders
+    compileNativeLib
+}
 
-classes.dependsOn(compileNativeLib)
-compileNativeLib.dependsOn(buildNativeHeaders)
+
 
 
 test {
     systemProperty "java.library.path", "${buildDir}"
+}
+
+jar {
+    from "license.txt"
 }
 
 
