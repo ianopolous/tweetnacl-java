@@ -25,7 +25,7 @@ test: compile
 	echo "Class-Path: " $(CP_SPACE)>> def.manifest
 
 
-	jar -cfm build/Test.jar def.manifest -C build/classes/jar org -C src/main/resources nacl.js
+	jar -cfm build/Test.jar def.manifest -C build/classes/jar org -C src/test/resources nacl.js
 
 	rm -f def.manifest
 
