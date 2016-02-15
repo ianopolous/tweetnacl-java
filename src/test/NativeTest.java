@@ -23,6 +23,33 @@ public class NativeTest {
         return Arrays.copyOf(of, of.length);
     }
 
+    private static void cryptoSignKeyPairTest(int nRound) {
+        for (int iRound = 0; iRound < nRound; iRound++) {
+            byte[] javaPublicKey = new byte[32];
+            byte[] javaSecretKey = new byte[64];
+            byte[] cPublicKey = new byte[32];
+            byte[] cSecretKey = new byte[64];
+
+            boolean isSeeded = true;
+            prng.nextBytes(javaSecretKey);
+            System.arraycopy(javaSecretKey, 0, cSecretKey, 0, javaSecretKey.length);
+
+            TweetNaCl.crypto_sign_keypair(javaPublicKey, javaSecretKey, isSeeded);
+
+            int jniRc = JniTweetNacl.crypto_sign_keypair(cPublicKey, cSecretKey);
+            if (jniRc != 0)
+                throw new IllegalStateException("non-zero jni return code " + jniRc);
+
+            if (!Arrays.equals(javaSecretKey, cSecretKey))
+                throw new IllegalStateException("Java secret key != C secret key!");
+
+            if (!Arrays.equals(javaPublicKey, cPublicKey))
+                throw new IllegalStateException("JNI unsign != original!");
+
+            assertTrue("crypto sign-keypair round " + iRound, Arrays.equals(javaSecretKey, cSecretKey));
+        }
+    }
+
     private static void cryptoSignOpenTest(int nRound, int messageLength) {
         byte[] publicKey = new byte[32];
         byte[] secretKey = new byte[64];
@@ -183,6 +210,7 @@ public class NativeTest {
             int size = (int) Math.pow(2, exp);
             size += prng.nextInt(size);
 
+            cryptoSignKeyPairTest(N_ROUND);
             cryptoBoxTest(N_ROUND, size);
             cryptoBoxOpenTest(N_ROUND, size);
             cryptoSignTest(N_ROUND, size);
