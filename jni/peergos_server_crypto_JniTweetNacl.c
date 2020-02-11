@@ -130,6 +130,40 @@ JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1box_1open
         return (jint) rc;
 }
 
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1secretbox
+(JNIEnv * env, jclass class, jbyteArray c, jbyteArray m, jlong d, jbyteArray n, jbyteArray k) {
+        u8* c_c = toArray(env, c);
+        u8* m_c = toArray(env, m);
+        u8* n_c = toArray(env, n);
+	u8* k_c = toArray(env, k);
+
+        int rc = crypto_secretbox(c_c, m_c, (long) d, n_c, k_c);
+        copy(env, c_c, c, 0, length(env, c));
+
+        free(c_c);
+        free(m_c);
+	free(n_c);
+        free(k_c);
+        return (jint) rc;
+}
+
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1secretbox_1open
+(JNIEnv * env, jclass class, jbyteArray m, jbyteArray c, jlong d, jbyteArray n, jbyteArray k) {
+        u8* m_c = toArray(env, m);
+        u8* c_c = toArray(env, c);
+        u8* n_c = toArray(env, n);
+	u8* k_c = toArray(env, k);
+
+        int rc = crypto_secretbox_open(m_c, c_c, (long) d, n_c, k_c);
+        copy(env, m_c, m, 0, length(env, m));
+
+        free(c_c);
+        free(m_c);
+	free(n_c);
+        free(k_c);
+        return (jint) rc;
+}
+
 JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1box
 (JNIEnv * env, jclass class, jbyteArray c, jbyteArray m, jlong d, jbyteArray n, jbyteArray y, jbyteArray x) {
 

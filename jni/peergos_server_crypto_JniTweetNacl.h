@@ -57,6 +57,22 @@ JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1sign_1key
 
 /*
  * Class:     peergos_server_crypto_JniTweetNacl
+ * Method:    crypto_secretbox_open
+ * Signature: ([B[BJ[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1secretbox_1open
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray);
+
+/*
+ * Class:     peergos_server_crypto_JniTweetNacl
+ * Method:    crypto_secretbox
+ * Signature: ([B[BJ[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1secretbox
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jlong, jbyteArray, jbyteArray);
+
+/*
+ * Class:     peergos_server_crypto_JniTweetNacl
  * Method:    crypto_scalarmult_base
  * Signature: ([B[B)I
  */

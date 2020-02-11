@@ -19,6 +19,11 @@ public class JniTweetNacl {
     public static native int crypto_sign_keypair(byte[] pk, byte[] sk);
 
 
+    public static native int crypto_secretbox_open(byte[] m, byte[] c, long d, byte[] n, byte[] k);
+
+    public static native int crypto_secretbox(byte[] c, byte[] m, long d, byte[] n, byte[] k);
+    
+
     public static native int crypto_scalarmult_base(byte[] q, byte[] n);
 
     public static native int ld32(byte[] b);
