@@ -1,4 +1,4 @@
-package org.peergos.crypto;
+package peergos.server.crypto;
 
 public class JniTweetNacl {
     static {

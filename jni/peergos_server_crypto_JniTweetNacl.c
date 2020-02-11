@@ -3,7 +3,7 @@
 #include <jni.h>
 #include "devurandom.c"
 #include "tweetnacl.c"
-#include "org_peergos_crypto_JniTweetNacl.h"
+#include "peergos_server_crypto_JniTweetNacl.h"
 
 typedef unsigned char u8;
 typedef unsigned long u32;
@@ -27,7 +27,7 @@ void copy(JNIEnv * env, u8* from, jbyteArray to, int offset, int length) {
     (*env)->SetByteArrayRegion(env, to, offset, length, from);
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_ld32
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_ld32
 (JNIEnv * env, jclass class, jbyteArray param){
         jsize length = (*env)->GetArrayLength(env, param);
         u8 array[length];
@@ -37,7 +37,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_ld32
 }
 
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1keypair
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1box_1keypair
 (JNIEnv * env, jclass class , jbyteArray publicKey, jbyteArray secretKey) {
 
         u8 pk[crypto_box_PUBLICKEYBYTES];
@@ -51,7 +51,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1keypair
 }
 
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1scalarmult_1base
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1scalarmult_1base
 (JNIEnv * env, jclass class , jbyteArray qin, jbyteArray nin) {
 
         u8 n[crypto_scalarmult_SCALARBYTES];
@@ -62,7 +62,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1scalarmult_1
         return (jint) rc;
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1open
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1sign_1open
 (JNIEnv * env, jclass class, jbyteArray message, jlong mlen,  jbyteArray sm, jlong n, jbyteArray publicKey) {
         
         u8* message_c = toArray(env, message); 
@@ -80,7 +80,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1open
         return (jint) rc;
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1sign
 (JNIEnv * env, jclass class, jbyteArray sm, jlong smlen, jbyteArray m, jlong n, jbyteArray sk) {
         u8* sm_c = toArray(env, sm);
         u64 smlen_c= (u64) smlen;
@@ -96,7 +96,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign
         return (jint) rc;
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1keypair
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1sign_1keypair
 (JNIEnv * env, jclass class, jbyteArray publicKey, jbyteArray signingKey) {
 
         u8* publicKey_c = toArray(env,publicKey);
@@ -111,7 +111,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1sign_1keypai
         return (jint) rc;
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1open
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1box_1open
 (JNIEnv * env, jclass class, jbyteArray message, jbyteArray cipher, jlong d, jbyteArray n, jbyteArray y, jbyteArray x) {
 
         u8* message_c = toArray(env,message);
@@ -130,7 +130,7 @@ JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box_1open
         return (jint) rc;
 }
 
-JNIEXPORT jint JNICALL Java_org_peergos_crypto_JniTweetNacl_crypto_1box
+JNIEXPORT jint JNICALL Java_peergos_server_crypto_JniTweetNacl_crypto_1box
 (JNIEnv * env, jclass class, jbyteArray c, jbyteArray m, jlong d, jbyteArray n, jbyteArray y, jbyteArray x) {
 
         u8* c_c = toArray(env,c);

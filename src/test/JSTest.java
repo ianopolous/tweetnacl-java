@@ -1,6 +1,6 @@
 package test;
 
-import org.peergos.crypto.TweetNaCl;
+import peergos.server.crypto.TweetNaCl;
 
 import javax.script.*;
 import java.io.InputStreamReader;

@@ -1,4 +1,4 @@
-package org.peergos.crypto;
+package peergos.server.crypto;
 
 import java.security.*;
 import java.util.Arrays;

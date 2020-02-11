@@ -1,6 +1,6 @@
 package test;
 
-import org.peergos.crypto.*;
+import peergos.server.crypto.*;
 
 import java.util.*;
 
