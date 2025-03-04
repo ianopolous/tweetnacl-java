@@ -1,0 +1,31 @@
+name: Native library builder
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04-arm]
+        bin: [peergos]
+        exclude:
+          - os: ubuntu-24.04-arm
+            bin: peergos.exe
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 8
+    - name: Build native library
+      shell: bash
+      run: make jni
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: libtweetnacl.so
+        path: "./libtweetnacl.so"
