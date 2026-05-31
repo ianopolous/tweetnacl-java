@@ -31,21 +31,22 @@ jobs:
       with:
         distribution: temurin
         java-version: 25
-    - name: Set up MSYS2 (Windows)
-      if: runner.os == 'Windows'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        install: mingw-w64-x86_64-gcc make
-        path-type: inherit
     - name: Build native library (Unix)
       if: runner.os != 'Windows'
       shell: bash
       run: make jni
     - name: Build native library (Windows)
       if: runner.os == 'Windows'
-      shell: msys2 {0}
-      run: make jni
+      shell: bash
+      run: |
+        export PATH="/c/msys64/mingw64/bin:$PATH"
+        mkdir -p build
+        javac -h jni -d build src/peergos/server/crypto/JniTweetNacl.java
+        JAVA_HOME_UNIX=$(cygpath -u "$JAVA_HOME")
+        gcc -O2 -Wimplicit-function-declaration -fPIC -std=c11 \
+          -I"$JAVA_HOME_UNIX/include" -I"$JAVA_HOME_UNIX/include/win32" \
+          -Inative -Ijni -shared -o tweetnacl.dll \
+          jni/peergos_server_crypto_JniTweetNacl.c -lbcrypt
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
