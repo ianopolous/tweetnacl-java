@@ -30,7 +30,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 8
+        java-version: 25
     - name: Set up MSYS2 (Windows)
       if: runner.os == 'Windows'
       uses: msys2/setup-msys2@v2
