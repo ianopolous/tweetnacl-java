@@ -37,6 +37,7 @@ jobs:
       with:
         msystem: MINGW64
         install: mingw-w64-x86_64-gcc make
+        path-type: inherit
     - name: Build native library (Unix)
       if: runner.os != 'Windows'
       shell: bash
