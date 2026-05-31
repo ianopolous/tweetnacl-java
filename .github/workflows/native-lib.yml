@@ -17,7 +17,7 @@ jobs:
           - os: macos-latest
             artifact: darwin-aarch64
             lib: libtweetnacl.dylib
-          - os: macos-13
+          - os: macos-15-intel
             artifact: darwin-amd64
             lib: libtweetnacl.dylib
           - os: windows-latest
