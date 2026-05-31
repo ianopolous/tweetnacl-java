@@ -51,8 +51,7 @@ test: compile
 .PHONY: jni
 jni:
 	mkdir -p build
-	javac -d build src/peergos/server/crypto/JniTweetNacl.java
-	javah -jni -classpath build -d jni peergos.server.crypto.JniTweetNacl
+	javac -h jni -d build src/peergos/server/crypto/JniTweetNacl.java
 	gcc -O2 -Wimplicit-function-declaration -fPIC -std=c11 \
 	  $(JNI_INCLUDE) -Inative -Ijni \
 	  $(SHARED_FLAGS) -o $(LIB_NAME) \
