@@ -1,3 +1,11 @@
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+
+void randombytes(unsigned char *x, unsigned long long xlen) {
+        BCryptGenRandom(NULL, (PUCHAR)x, (ULONG)xlen, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+}
+#else
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -30,3 +38,4 @@ void randombytes(unsigned char *x,unsigned long long xlen)
                 xlen -= i;
         }
 }
+#endif

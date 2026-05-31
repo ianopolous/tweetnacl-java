@@ -7,21 +7,46 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04-arm]
+        include:
+          - os: ubuntu-latest
+            artifact: linux-amd64
+            lib: libtweetnacl.so
+          - os: ubuntu-24.04-arm
+            artifact: linux-aarch64
+            lib: libtweetnacl.so
+          - os: macos-latest
+            artifact: darwin-aarch64
+            lib: libtweetnacl.dylib
+          - os: macos-13
+            artifact: darwin-amd64
+            lib: libtweetnacl.dylib
+          - os: windows-latest
+            artifact: windows-amd64
+            lib: tweetnacl.dll
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
-    - uses: ilammy/msvc-dev-cmd@v1
     - name: Set up JDK
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 8
-    - name: Build native library
+    - name: Set up MSYS2 (Windows)
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: mingw-w64-x86_64-gcc make
+    - name: Build native library (Unix)
+      if: runner.os != 'Windows'
       shell: bash
       run: make jni
-    - name: Upload package artifact
+    - name: Build native library (Windows)
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: make jni
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: libtweetnacl.so
-        path: "./libtweetnacl.so"
+        name: ${{ matrix.artifact }}
+        path: "./${{ matrix.lib }}"
